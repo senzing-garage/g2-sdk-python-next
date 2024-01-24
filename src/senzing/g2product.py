@@ -17,6 +17,7 @@ Example:
 # pylint: disable=R0903
 
 
+import json
 import os
 from ctypes import POINTER, c_char, c_char_p, c_int, c_longlong, c_size_t, cdll
 from typing import Any, Dict, Union
@@ -34,6 +35,19 @@ __updated__ = "2023-11-07"
 
 SENZING_PRODUCT_ID = "5046"  # See https://github.com/Senzing/knowledge-base/blob/main/lists/senzing-component-ids.md
 CALLER_SKIP = 6  # Number of stack frames to skip when reporting location in Exception.
+
+# -----------------------------------------------------------------------------
+# Helper classes
+# -----------------------------------------------------------------------------
+
+
+class AsDict(str):
+    def __init__(self, json_string):
+        AsDict.json_string = json_string
+
+    def as_dict(self):
+        return json.loads(AsDict.json_string)
+
 
 # -----------------------------------------------------------------------------
 # G2Product class
@@ -215,8 +229,8 @@ class G2Product(G2ProductAbstract):
                 4002, module_name, ini_params, verbose_logging, result
             )
 
-    def license(self, *args: Any, **kwargs: Any) -> str:
-        return str(self.library_handle.G2Product_license().decode())
+    def license(self, *args: Any, **kwargs: Any) -> AsDict:
+        return AsDict(str(self.library_handle.G2Product_license().decode()))
 
     def version(self, *args: Any, **kwargs: Any) -> str:
-        return str(self.library_handle.G2Product_version().decode())
+        return AsDict(str(self.library_handle.G2Product_version().decode()))
