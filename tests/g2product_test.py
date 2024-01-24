@@ -108,7 +108,7 @@ def test_license(g2_product):
     assert schema(license_schema) == actual_json
 
 
-def test_license_as_json(g2_product):
+def test_license_as_dict(g2_product):
     """Test Senzing license."""
     actual = g2_product.license().as_dict()
     assert isinstance(actual, dict)
