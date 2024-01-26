@@ -120,6 +120,8 @@ def as_c_char_p(candidate_value: Any) -> Any:
         return str(candidate_value).encode("utf-8")
     # input is already a str
     # return candidate_value
+    # TODO Instead of TypeError can we utilise G2BadInputException and a new exception so a user only needs to catch
+    # g2exception or G2BadInputException instead of knowing they must also catch TypeError. Would be more convenient and simpler
     raise TypeError(
         f"{candidate_value} has unsupported type of {type(candidate_value)}"
     )

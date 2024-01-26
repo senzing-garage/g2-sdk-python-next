@@ -13,10 +13,11 @@ INI_PARAMS_DICT = {
 }
 MODULE_NAME = "Example"
 
-ENTITY_ID = 1
+DATA_SOURCE_CODE = "TEST"
+RECORD_ID = "Example-1"
 
 try:
     g2_engine = g2engine.G2Engine(MODULE_NAME, INI_PARAMS_DICT)
-    g2_engine.reevaluate_entity(ENTITY_ID)
+    g2_engine.reevaluate_record(DATA_SOURCE_CODE, RECORD_ID)
 except G2Exception as err:
     print(err)

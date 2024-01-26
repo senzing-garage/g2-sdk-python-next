@@ -1,5 +1,6 @@
 #! /usr/bin/env python3
 
+
 from senzing import g2engine
 from senzing.g2exception import G2Exception
 
@@ -13,10 +14,10 @@ INI_PARAMS_DICT = {
 }
 MODULE_NAME = "Example"
 
-ENTITY_ID = 1
-
 try:
     g2_engine = g2engine.G2Engine(MODULE_NAME, INI_PARAMS_DICT)
-    g2_engine.reevaluate_entity(ENTITY_ID)
+    # Using get_active_config_id for demonstrations purposes
+    active_config_id = g2_engine.get_active_config_id()
+    g2_engine.reinit(active_config_id)
 except G2Exception as err:
     print(err)

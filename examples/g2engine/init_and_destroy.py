@@ -13,10 +13,10 @@ INI_PARAMS_DICT = {
 }
 MODULE_NAME = "Example"
 
-ENTITY_ID = 1
-
 try:
-    g2_engine = g2engine.G2Engine(MODULE_NAME, INI_PARAMS_DICT)
-    g2_engine.reevaluate_entity(ENTITY_ID)
+    g2_engine = g2engine.G2Engine()
+    g2_engine.init(MODULE_NAME, INI_PARAMS_DICT)
+    # Do Work
+    g2_engine.destroy()
 except G2Exception as err:
     print(err)

@@ -5,22 +5,58 @@ TODO: g2engine_abstract.py
 """
 
 # pylint: disable=C0302
+# AC - Temp disables to get changes in for move to senzing garage
+# pylint: disable=W0511,W1113
 
 
 # Import from standard library. https://docs.python.org/3/library/
 
 import json
 from abc import ABC, abstractmethod
-from typing import Any, Dict, Tuple, cast
+
+# TODO Possible "observer" approach for with info
+# from dataclasses import dataclass
+# from typing import Any, Dict, Protocol, Tuple, Union, cast, runtime_checkable
+from typing import Any, Dict, Tuple, cast, Union
 
 from .g2engineflags import G2EngineFlags
 
 # Metadata
 
+# __all__ = ["G2EngineAbstract", "WithInfoResponsesAbstract"]
 __all__ = ["G2EngineAbstract"]
 __version__ = "0.0.1"  # See https://www.python.org/dev/peps/pep-0396/
 __date__ = "2023-10-30"
 __updated__ = "2023-10-30"
+
+# -------------------------------------------------------------------------
+# Data Classes
+# -------------------------------------------------------------------------
+
+
+# TODO Possible "observer" approach for with info
+# @dataclass(slots=True)
+# class WithInfoResponsesAbstract(ABC):
+#     @abstractmethod
+#     def append(self, response: str) -> None:
+#         """"""
+
+#     @abstractmethod
+#     def get_and_clear(self) -> deque[str]:
+#         """"""
+
+#     @abstractmethod
+#     def len(self) -> int:
+#         """"""
+
+#     @abstractmethod
+#     def sizeof(self) -> int:
+#         """"""
+
+
+# -------------------------------------------------------------------------
+# Classes
+# -------------------------------------------------------------------------
 
 
 class G2EngineAbstract(ABC):
@@ -33,117 +69,200 @@ class G2EngineAbstract(ABC):
     # -------------------------------------------------------------------------
 
     # TODO: Change to f-strings
+    # TODO Remove all _V2 for V4
     # Change to be same as g2Product: G2Engine_<method_name()>
     PREFIX = "g2engine."
     """ :meta private: """
 
+    # TODO Reorder and sort - some APIs are going away and search was added to end temporarily
+    # TODO Removed all the _V2 versions
+    # TODO It doesn't make sense to have G2_, that isn't the method name
     ID_MESSAGES = {
         4001: PREFIX + "G2_addRecord({0}, {1}, {2}, {3}) failed. Return code: {4}",
-        4002: PREFIX
-        + "G2_addRecordWithInfo({0}, {1}, {2}, {3}, {4}) failed. Return code: {5}",
-        4003: PREFIX
-        + "G2_addRecordWithInfoWithReturnedRecordID({0}, {1}, {2}, {3}) failed. Return code: {4}",
-        4004: PREFIX
-        + "G2_addRecordWithReturnedRecordID({0}, {1}, {2}) failed. Return code: {3}",
+        4002: (
+            PREFIX
+            + "G2_addRecordWithInfo({0}, {1}, {2}, {3}, {4}) failed. Return code: {5}"
+        ),
+        # NOTE These are being removed for V4
+        # 4003: (
+        #     PREFIX
+        #     + "G2_addRecordWithInfoWithReturnedRecordID({0}, {1}, {2}, {3}) failed."
+        #     " Return code: {4}"
+        # ),
+        # 4004: (
+        #     PREFIX
+        #     + "G2_addRecordWithReturnedRecordID({0}, {1}, {2}) failed. Return code: {3}"
+        # ),
+        # NOTE Is checkRecord being removed?
         4005: PREFIX + "G2_checkRecord({0}, {1}) failed. Return code: {2}",
         4006: PREFIX + "G2_closeExport({0}) failed. Return code: {1}",
-        4007: PREFIX + "G2_deleteRecord({0}, {1}, {2}) failed. Return code: {3}",
-        4008: PREFIX
-        + "G2_deleteRecordWithInfo({0}, {1}, {2}, {3}) failed. Return code: {4}",
-        4009: PREFIX + "G2_destroy() failed. Return code: {0}",
-        4010: PREFIX + "G2_exportConfigAndConfigID() failed. Return code: {0}",
-        4011: PREFIX + "G2_exportConfig() failed. Return code: {0}",
-        4012: PREFIX + "G2_exportCSVEntityReport({0}, {1}) failed. Return code: {2}",
-        4013: PREFIX + "G2_exportJSONEntityReport({0}) failed. Return code: {1}",
-        4014: PREFIX + "G2_fetchNext({0}) failed. Return code: {1}",
-        4015: PREFIX
-        + "G2_findInterestingEntitiesByEntityID({0}, {1}) failed. Return code: {2}",
-        4016: PREFIX
-        + "G2_findInterestingEntitiesByRecordID({0}, {1}, {2}) failed. Return code: {3}",
-        4017: PREFIX
-        + "G2_findNetworkByEntityID({0}, {1}, {2}, {3}) failed. Return code: {4}",
-        4018: PREFIX
-        + "G2_findNetworkByEntityID_V2({0}, {1}, {2}, {3}, {4}) failed. Return code: {5}",
-        4019: PREFIX
-        + "G2_findNetworkByRecordID({0}, {1}, {2}, {3}) failed. Return code: {4}",
-        4020: PREFIX
-        + "G2_findNetworkByRecordID_V2({0}, {1}, {2}, {3}, {4}) failed. Return code: {5}",
-        4021: PREFIX + "G2_findPathByEntityID({0}, {1}, {2}) failed. Return code: {3}",
-        4022: PREFIX
-        + "G2_findPathByEntityID_V2({0}, {1}, {2}, {3}) failed. Return code: {4}",
-        4023: PREFIX
-        + "G2_findPathByRecordID({0}, {1}, {2}, {3}, {4}) failed. Return code: {5}",
-        4024: PREFIX
-        + "G2_findPathByRecordID_V2({0}, {1}, {2}, {3}, {4}, {5}) failed. Return code: {0}",
-        4025: PREFIX
-        + "G2_findPathExcludingByEntityID({0}, {1}, {2}, {3}) failed. Return code: {4}",
-        4026: PREFIX
-        + "G2_findPathExcludingByEntityID_V2({0}, {1}, {2}, {3}, {4}) failed. Return code: {5}",
-        4027: PREFIX
-        + "G2_findPathExcludingByRecordID({0}, {1}, {2}, {3} {4}, {5}) failed. Return code: {6}",
-        4028: PREFIX
-        + "G2_findPathExcludingByRecordID_V2({0}, {1}, {2}, {3} {4}, {5}, {6}) failed. Return code: {7}",
-        4029: PREFIX
-        + "G2_findPathIncludingSourceByEntityID({0}, {1}, {2}, {3}, {4}) failed. Return code: {5}",
-        4030: PREFIX
-        + "G2_findPathIncludingSourceByEntityID_V2({0}, {1}, {2}, {3}, {4}, {5}) failed. Return code: {6}",
-        4031: PREFIX
-        + "G2_findPathIncludingSourceByRecordID({0}, {1}, {2}, {3} {4}, {5}, {6}) failed. Return code: {7}",
-        4032: PREFIX
-        + "G2_findPathIncludingSourceByRecordID_V2({0}, {1}, {2}, {3} {4}, {5}, {6}, {7}) failed. Return code: {8}",
-        4033: PREFIX + "G2_getActiveConfigID() failed. Return code: {0}",
+        4007: PREFIX + "G2_countRedoRecords failed. Return code: {0}",
+        4008: PREFIX + "G2_deleteRecord({0}, {1}, {2}) failed. Return code: {3}",
+        4009: (
+            PREFIX
+            + "G2_deleteRecordWithInfo({0}, {1}, {2}, {3}) failed. Return code: {4}"
+        ),
+        4010: PREFIX + "G2_destroy() failed. Return code: {0}",
+        4011: PREFIX + "G2_exportConfigAndConfigID() failed. Return code: {0}",
+        4012: PREFIX + "G2_exportConfig() failed. Return code: {0}",
+        4013: PREFIX + "G2_exportCSVEntityReport({0}, {1}) failed. Return code: {2}",
+        4014: PREFIX + "G2_exportJSONEntityReport({0}) failed. Return code: {1}",
+        4015: PREFIX + "G2_fetchNext({0}) failed. Return code: {1}",
+        4016: (
+            PREFIX
+            + "G2_findInterestingEntitiesByEntityID({0}, {1}) failed. Return code: {2}"
+        ),
+        4017: (
+            PREFIX
+            + "G2_findInterestingEntitiesByRecordID({0}, {1}, {2}) failed. Return"
+            " code: {3}"
+        ),
+        4018: (
+            PREFIX
+            + "G2_findNetworkByEntityID({0}, {1}, {2}, {3}) failed. Return code: {4}"
+        ),
+        4019: (
+            PREFIX
+            + "G2_findNetworkByEntityID_V2({0}, {1}, {2}, {3}, {4}) failed. Return"
+            " code: {5}"
+        ),
+        4020: (
+            PREFIX
+            + "G2_findNetworkByRecordID({0}, {1}, {2}, {3}) failed. Return code: {4}"
+        ),
+        4021: (
+            PREFIX
+            + "G2_findNetworkByRecordID_V2({0}, {1}, {2}, {3}, {4}) failed. Return"
+            " code: {5}"
+        ),
+        4022: PREFIX + "G2_findPathByEntityID({0}, {1}, {2}) failed. Return code: {3}",
+        4023: (
+            PREFIX
+            + "G2_findPathByEntityID_V2({0}, {1}, {2}, {3}) failed. Return code: {4}"
+        ),
+        4024: (
+            PREFIX
+            + "G2_findPathByRecordID({0}, {1}, {2}, {3}, {4}) failed. Return code: {5}"
+        ),
+        4025: (
+            PREFIX
+            + "G2_findPathByRecordID_V2({0}, {1}, {2}, {3}, {4}, {5}) failed. Return"
+            " code: {0}"
+        ),
+        4026: (
+            PREFIX
+            + "G2_findPathExcludingByEntityID({0}, {1}, {2}, {3}) failed. Return"
+            " code: {4}"
+        ),
+        4027: (
+            PREFIX
+            + "G2_findPathExcludingByEntityID_V2({0}, {1}, {2}, {3}, {4}) failed."
+            " Return code: {5}"
+        ),
+        4028: (
+            PREFIX
+            + "G2_findPathExcludingByRecordID({0}, {1}, {2}, {3} {4}, {5}) failed."
+            " Return code: {6}"
+        ),
+        4029: (
+            PREFIX
+            + "G2_findPathExcludingByRecordID_V2({0}, {1}, {2}, {3} {4}, {5}, {6})"
+            " failed. Return code: {7}"
+        ),
+        4030: (
+            PREFIX
+            + "G2_findPathIncludingSourceByEntityID({0}, {1}, {2}, {3}, {4}) failed."
+            " Return code: {5}"
+        ),
+        4031: (
+            PREFIX
+            + "G2_findPathIncludingSourceByEntityID_V2({0}, {1}, {2}, {3}, {4}, {5})"
+            " failed. Return code: {6}"
+        ),
+        4032: (
+            PREFIX
+            + "G2_findPathIncludingSourceByRecordID({0}, {1}, {2}, {3} {4}, {5}, {6})"
+            " failed. Return code: {7}"
+        ),
+        4033: (
+            PREFIX
+            + "G2_findPathIncludingSourceByRecordID_V2({0}, {1}, {2}, {3} {4}, {5},"
+            " {6}, {7}) failed. Return code: {8}"
+        ),
+        4034: PREFIX + "G2_getActiveConfigID() failed. Return code: {0}",
         # TODO Modified to reflect V4
         # 4034: PREFIX + "G2_getEntityByEntityID({0}) failed. Return code: {1}",
-        4034: PREFIX + "G2_getEntityByEntityID({0}, {1}) failed. Return code: {2}",
-        4035: PREFIX + "G2_getEntityByEntityID_V2({0}, {1}) failed. Return code: {2}",
-        4036: PREFIX + "G2_getEntityByRecordID({0}, {1}) failed. Return code: {2}",
-        4037: PREFIX
-        + "G2_getEntityByRecordID_V2({0}, {1}, {2}) failed. Return code: {3}",
-        4038: PREFIX + "G2_getLastException() failed. Return code: {0}",
-        4039: PREFIX + "G2_getRecord({0}, {1}) failed. Return code: {2}",
-        4040: PREFIX + "G2_getRecord_V2({0}, {1}, {2}) failed. Return code: {3}",
-        4041: PREFIX + "G2_getRedoRecord() failed. Return code: {0}",
-        4042: PREFIX + "G2_getRepositoryLastModifiedTime() failed. Return code: {0}",
-        4043: PREFIX + "G2_getVirtualEntityByRecordID({0}) failed. Return code: {1}",
-        4044: PREFIX
-        + "G2_getVirtualEntityByRecordID_V2({0}, {1}) failed. Return code: {2}",
-        4045: PREFIX + "G2_howEntityByEntityID({0}) failed. Return code: {1}",
-        4046: PREFIX + "G2_howEntityByEntityID_V2({0}, {1}) failed. Return code: {2}",
-        4047: PREFIX + "G2_init({0}, {1}, {2}) failed. Return code: {3}",
-        4048: PREFIX
-        + "G2_initWithConfigID({0}, {1}, {2}, {3}) failed. Return code: {4}",
-        4049: PREFIX + "G2_primeEngine() failed. Return code: {0}",
-        4050: PREFIX + "G2_process({0}) failed. Return code: {1}",
-        4051: PREFIX + "G2_processRedoRecord() failed. Return code: {0}",
-        4052: PREFIX + "G2_processRedoRecordWithInfo({0}) failed. Return code: {0}",
-        4053: PREFIX + "G2_processWithInfo({0}, {1}) failed. Return code: {2}",
-        4054: PREFIX + "G2_processWithResponse({0}) failed. Return code: {1}",
-        4055: PREFIX + "G2_processWithResponseResize({0}) failed. Return code: {1}",
-        4056: PREFIX + "G2_purgeRepository() failed. Return code: {0}",
-        4057: PREFIX + "G2_reevaluateEntity({0}, {1}) failed. Return code: {2}",
-        4058: PREFIX + "G2_reevaluateEntityWithInfo({0}, {1}) failed. Return code: {2}",
-        4059: PREFIX + "G2_reevaluateRecord({0}, {1}, {2}) failed. Return code: {3}",
-        4060: PREFIX
-        + "G2_reevaluateRecordWithInfo({0}, {1}, {2}) failed. Return code: {3}",
-        4061: PREFIX + "G2_reinit({0}) failed. Return code: {1}",
-        4062: PREFIX + "G2_replaceRecord({0}, {1}, {2}, {3}) failed. Return code: {4}",
-        4063: PREFIX
-        + "G2_replaceRecordWithInfo({0}, {1}, {2}, {3}, {4}) failed. Return code: {5}",
-        4064: PREFIX + "G2_searchByAttributes({0}) failed. Return code: {5}",
-        4065: PREFIX + "G2_searchByAttributes_V2({0}, {1}) failed. Return code: {2}",
-        4066: PREFIX + "G2_stats() failed. Return code: {0}",
-        4067: PREFIX + "G2_whyEntities({0}, {1}) failed. Return code: {2}",
-        4068: PREFIX + "G2_whyEntities_V2({0}, {1}, {2}) failed. Return code: {3}",
-        4069: PREFIX + "G2_whyEntityByEntityID({0}) failed. Return code: {1}",
-        4070: PREFIX + "G2_whyEntityByEntityID_V2({0}, {1}) failed. Return code: {2}",
-        4071: PREFIX + "G2_whyEntityByRecordID({0}, {1}) failed. Return code: {2}",
-        4072: PREFIX
-        + "G2_whyEntityByRecordID_V2({0}, {1}, {2}) failed. Return code: {3}",
-        4073: PREFIX + "G2_whyRecords({0}, {1}, {2}, {3}) failed. Return code: {4}",
-        4074: PREFIX
-        + "G2_whyRecords_V2({0}, {1}, {2}, {3}, {4}) failed. Return code: {5}",
-        4075: PREFIX
-        + "G2Engine{0}, {1}) failed. module_name and ini_params must both be set or both be empty",
+        4035: PREFIX + "G2_getEntityByEntityID({0}, {1}) failed. Return code: {2}",
+        4036: PREFIX + "G2_getEntityByEntityID_V2({0}, {1}) failed. Return code: {2}",
+        4037: PREFIX + "G2_getEntityByRecordID({0}, {1}) failed. Return code: {2}",
+        4038: (
+            PREFIX + "G2_getEntityByRecordID_V2({0}, {1}, {2}) failed. Return code: {3}"
+        ),
+        4039: PREFIX + "G2_getLastException() failed. Return code: {0}",
+        4040: PREFIX + "G2_getRecord({0}, {1}) failed. Return code: {2}",
+        4041: PREFIX + "G2_getRecord_V2({0}, {1}, {2}) failed. Return code: {3}",
+        4042: PREFIX + "G2_getRedoRecord() failed. Return code: {0}",
+        4043: PREFIX + "G2_getRepositoryLastModifiedTime() failed. Return code: {0}",
+        4044: PREFIX + "G2_getVirtualEntityByRecordID({0}) failed. Return code: {1}",
+        4045: (
+            PREFIX
+            + "G2_getVirtualEntityByRecordID_V2({0}, {1}) failed. Return code: {2}"
+        ),
+        4046: PREFIX + "G2_howEntityByEntityID({0}) failed. Return code: {1}",
+        4047: PREFIX + "G2_howEntityByEntityID_V2({0}, {1}) failed. Return code: {2}",
+        4048: PREFIX + "G2_init({0}, {1}, {2}) failed. Return code: {3}",
+        4049: (
+            PREFIX + "G2_initWithConfigID({0}, {1}, {2}, {3}) failed. Return code: {4}"
+        ),
+        4050: PREFIX + "G2_primeEngine() failed. Return code: {0}",
+        4051: PREFIX + "G2_process({0}) failed. Return code: {1}",
+        4052: PREFIX + "G2_processRedoRecord() failed. Return code: {0}",
+        4053: PREFIX + "G2_processRedoRecordWithInfo({0}) failed. Return code: {0}",
+        4054: PREFIX + "G2_processWithInfo({0}, {1}) failed. Return code: {2}",
+        4055: PREFIX + "G2_processWithResponse({0}) failed. Return code: {1}",
+        4056: PREFIX + "G2_processWithResponseResize({0}) failed. Return code: {1}",
+        4057: PREFIX + "G2_purgeRepository() failed. Return code: {0}",
+        4058: PREFIX + "G2_reevaluateEntity({0}, {1}) failed. Return code: {2}",
+        4059: PREFIX + "G2_reevaluateEntityWithInfo({0}, {1}) failed. Return code: {2}",
+        4060: PREFIX + "G2_reevaluateRecord({0}, {1}, {2}) failed. Return code: {3}",
+        4061: (
+            PREFIX
+            + "G2_reevaluateRecordWithInfo({0}, {1}, {2}) failed. Return code: {3}"
+        ),
+        4062: PREFIX + "G2_reinit({0}) failed. Return code: {1}",
+        4063: PREFIX + "G2_replaceRecord({0}, {1}, {2}, {3}) failed. Return code: {4}",
+        4064: (
+            PREFIX
+            + "G2_replaceRecordWithInfo({0}, {1}, {2}, {3}, {4}) failed. Return"
+            " code: {5}"
+        ),
+        # TODO This needs fixing, wrong number of fields
+        4065: PREFIX + "G2_searchByAttributes({0}) failed. Return code: {1}",
+        4066: PREFIX + "G2_searchByAttributes_V2({0}, {1}) failed. Return code: {2}",
+        4067: PREFIX + "G2_stats() failed. Return code: {0}",
+        4068: PREFIX + "G2_whyEntities({0}, {1}) failed. Return code: {2}",
+        4069: PREFIX + "G2_whyEntities_V2({0}, {1}, {2}) failed. Return code: {3}",
+        4070: PREFIX + "G2_whyEntityByEntityID({0}) failed. Return code: {1}",
+        4071: PREFIX + "G2_whyEntityByEntityID_V2({0}, {1}) failed. Return code: {2}",
+        4072: PREFIX + "G2_whyEntityByRecordID({0}, {1}) failed. Return code: {2}",
+        4073: (
+            PREFIX + "G2_whyEntityByRecordID_V2({0}, {1}, {2}) failed. Return code: {3}"
+        ),
+        4074: PREFIX + "G2_whyRecords({0}, {1}, {2}, {3}) failed. Return code: {4}",
+        4075: (
+            PREFIX
+            + "G2_whyRecords_V2({0}, {1}, {2}, {3}, {4}) failed. Return code: {5}"
+        ),
+        # TODO This text doesn't make sense without specifying there are 2 ways to init
+        4076: (
+            PREFIX
+            + "G2Engine{0}, {1}) failed. module_name and ini_params must both be set or"
+            " both be empty"
+        ),
+        # TODO Reorder this for V4
+        4077: (
+            PREFIX + "G2_searchByAttributes_V3({0}, {1}, {2}) failed. Return code: {3}"
+        ),
     }
     """ :meta private: """
 
@@ -156,9 +275,11 @@ class G2EngineAbstract(ABC):
         self,
         data_source_code: str,
         record_id: str,
-        json_data: str,
-        # TODO: load_id is no longer used, being removed from V4 C api?
+        # json_data: str,
+        json_data: Union[str, Dict[Any, Any]],
+        # FIXME load_id is no longer used, being removed from V4 C api?
         load_id: str = "",
+        *args: Any,
         **kwargs: Any,
     ) -> None:
         """
@@ -168,7 +289,7 @@ class G2EngineAbstract(ABC):
         Args:
             data_source_code (str): Identifies the provenance of the data.
             record_id (str): The unique identifier within the records of the same data source.
-            json_data (str): A JSON document containing the record to be added to the Senzing repository.
+            json_data (str | Dict): A JSON document containing the record to be added to the Senzing repository.
             load_id (str, optional): An identifier used to distinguish different load batches/sessions. An empty string is acceptable. Defaults to "".
 
         Raises:
@@ -180,12 +301,52 @@ class G2EngineAbstract(ABC):
                 :language: python
         """
 
+    # TODO Possible "observer" approach for with info
+    # @abstractmethod
+    # def add_record(
+    #     self,
+    #     data_source_code: str,
+    #     record_id: str,
+    #     json_data: str,
+    #     # FIXME load_id is no longer used, being removed from V4 C api?
+    #     load_id: str = "",
+    #     # with_info: bool = False,
+    #     # with_info_obj: object = None,
+    #     # with_info_obj: Union[Type[WithInfoObserve], None] = None,
+    #     # with_info_obj: Optional[list[str]] = field(default=None),
+    #     # with_info_obj: Optional[Union[type[WithInfoObserve], None]] = None,
+    #     with_info_obj: Optional[Union[WithInfoResponsesAbstract, None]] = None,
+    #     flags: int = 0,
+    #     *args: Any,
+    #     **kwargs: Any,
+    # ) -> Union[None, str]:
+    #     # TODO: Add in with info details
+    #     """
+    #     The `add_record` method adds a record into the Senzing repository.
+    #     Can be called as many times as desired and from multiple threads at the same time.
+
+    #     Args:
+    #         data_source_code (str): Identifies the provenance of the data.
+    #         record_id (str): The unique identifier within the records of the same data source.
+    #         json_data (str): A JSON document containing the record to be added to the Senzing repository.
+    #         load_id (str, optional): An identifier used to distinguish different load batches/sessions. An empty string is acceptable. Defaults to "".
+
+    #     Raises:
+
+    #     .. collapse:: Example:
+
+    #         .. literalinclude:: ../../examples/g2engine/add_record.py
+    #             :linenos:
+    #             :language: python
+    #     """
+
     @abstractmethod
     def add_record_with_info(
         self,
         data_source_code: str,
         record_id: str,
-        json_data: str,
+        # json_data: str,
+        json_data: Union[str, Dict[Any, Any]],
         # TODO: load_id is no longer used, being removed from V4 C api?
         load_id: str = "",
         flags: int = 0,
@@ -558,50 +719,51 @@ class G2EngineAbstract(ABC):
         """
 
     # TODO: This should be going away in V4?
-    @abstractmethod
-    def find_network_by_entity_id_v2(
-        self,
-        entity_list: str,
-        max_degree: int,
-        build_out_degree: int,
-        max_entities: int,
-        flags: int = G2EngineFlags.G2_FIND_PATH_DEFAULT_FLAGS,
-        **kwargs: Any,
-    ) -> str:
-        """
-        The `find_network_by_entity_id_v2` method finds all entities surrounding a requested set of entities.
-        This includes the requested entities, paths between them, and relations to other nearby entities.
-        It extends `find_network_by_entity_id` by adding output control flags.
+    # @abstractmethod
+    # def find_network_by_entity_id_v2(
+    #     self,
+    #     entity_list: str,
+    #     max_degree: int,
+    #     build_out_degree: int,
+    #     max_entities: int,
+    #     flags: int = G2EngineFlags.G2_FIND_PATH_DEFAULT_FLAGS,
+    #     **kwargs: Any,
+    # ) -> str:
+    #     """
+    #     The `find_network_by_entity_id_v2` method finds all entities surrounding a requested set of entities.
+    #     This includes the requested entities, paths between them, and relations to other nearby entities.
+    #     It extends `find_network_by_entity_id` by adding output control flags.
 
-        Args:
-            entity_list (str): A JSON document listing entities.
-            max_degree (int): The maximum number of degrees in paths between search entities.
-            build_out_degree (int): The number of degrees of relationships to show around each search entity.
-            max_entities (int): The maximum number of entities to return in the discovered network.
-            flags (int, optional): The maximum number of entities to return in the discovered network.. Defaults to G2EngineFlags.G2_FIND_PATH_DEFAULT_FLAGS.
+    #     Args:
+    #         entity_list (str): A JSON document listing entities.
+    #         max_degree (int): The maximum number of degrees in paths between search entities.
+    #         build_out_degree (int): The number of degrees of relationships to show around each search entity.
+    #         max_entities (int): The maximum number of entities to return in the discovered network.
+    #         flags (int, optional): The maximum number of entities to return in the discovered network.. Defaults to G2EngineFlags.G2_FIND_PATH_DEFAULT_FLAGS.
 
-        Returns:
-            str: A JSON document.
+    #     Returns:
+    #         str: A JSON document.
 
-        Raises:
+    #     Raises:
 
-        .. collapse:: Example:
+    #     .. collapse:: Example:
 
-            .. literalinclude:: ../../examples/g2engine/find_network_by_entity_id_v2.py
-                :linenos:
-                :language: python
+    #         .. literalinclude:: ../../examples/g2engine/find_network_by_entity_id_v2.py
+    #             :linenos:
+    #             :language: python
 
-            **Output:**
+    #         **Output:**
 
-            .. literalinclude:: ../../examples/g2engine/find_network_by_entity_id_v2.txt
-                :linenos:
-                :language: json
-        """
+    #         .. literalinclude:: ../../examples/g2engine/find_network_by_entity_id_v2.txt
+    #             :linenos:
+    #             :language: json
+    #     """
 
     @abstractmethod
     def find_network_by_entity_id(
         self,
-        entity_list: str,
+        # entity_list: str,
+        entity_list: Union[str, Dict[Any, Any]],
         max_degree: int,
         build_out_degree: int,
         max_entities: int,
@@ -642,49 +804,6 @@ class G2EngineAbstract(ABC):
         """
 
     # TODO: This should be going away in V4?
-    @abstractmethod
-    def find_network_by_record_id_v2(
-        self,
-        record_list: str,
-        max_degree: int,
-        build_out_degree: int,
-        max_entities: int,
-        flags: int = G2EngineFlags.G2_FIND_PATH_DEFAULT_FLAGS,
-        **kwargs: Any,
-    ) -> str:
-        """
-        The `find_network_by_record_id_v2` method finds all entities surrounding a requested set of entities by their RECORD_ID values.
-        This includes the requested entities, paths between them, and relations to other nearby entities.
-        Returns a JSON document that identifies the path between the each set of search entities (if the path exists),
-        and the information for the entities in the path.
-
-        It extends `find_network_by_record_id` by adding output control flags.
-
-        Args:
-            record_list (str): A JSON document listing records.
-            max_degree (int): The maximum number of degrees in paths between search entities.
-            build_out_degree (int): The number of degrees of relationships to show around each search entity.
-            max_entities (int): The maximum number of entities to return in the discovered network.
-            flags (int, optional): Flags used to control information returned. Defaults to G2EngineFlags.G2_FIND_PATH_DEFAULT_FLAGS.
-
-        Returns:
-            str: A JSON document.
-
-        Raises:
-
-        .. collapse:: Example:
-
-            .. literalinclude:: ../../examples/g2engine/find_network_by_record_id_v2.py
-                :linenos:
-                :language: python
-
-            **Output:**
-
-            .. literalinclude:: ../../examples/g2engine/find_network_by_record_id_v2.txt
-                :linenos:
-                :language: json
-        """
-
     @abstractmethod
     def find_network_by_record_id(
         self,
@@ -729,43 +848,43 @@ class G2EngineAbstract(ABC):
         """
 
     # TODO: This should be going away in V4?
-    @abstractmethod
-    def find_path_by_entity_id_v2(
-        self,
-        entity_id_1: int,
-        entity_id_2: int,
-        max_degree: int,
-        flags: int = G2EngineFlags.G2_FIND_PATH_DEFAULT_FLAGS,
-        **kwargs: Any,
-    ) -> str:
-        """
-        The `find_path_by_entity_id_v2` method finds single relationship paths between two entities.
-        Paths are found using known relationships with other entities.
-        It extends `find_path_by_entity_id` by adding output control flags.
+    # @abstractmethod
+    # def find_path_by_entity_id_v2(
+    #     self,
+    #     entity_id_1: int,
+    #     entity_id_2: int,
+    #     max_degree: int,
+    #     flags: int = G2EngineFlags.G2_FIND_PATH_DEFAULT_FLAGS,
+    #     **kwargs: Any,
+    # ) -> str:
+    #     """
+    #     The `find_path_by_entity_id_v2` method finds single relationship paths between two entities.
+    #     Paths are found using known relationships with other entities.
+    #     It extends `find_path_by_entity_id` by adding output control flags.
 
-        Args:
-            entity_id_1 (int): The entity ID for the starting entity of the search path.
-            entity_id_2 (int): The entity ID for the ending entity of the search path.
-            max_degree (int): The maximum number of degrees in paths between search entities.
-            flags (int, optional): Flags used to control information returned. Defaults to G2EngineFlags.G2_FIND_PATH_DEFAULT_FLAGS.
+    #     Args:
+    #         entity_id_1 (int): The entity ID for the starting entity of the search path.
+    #         entity_id_2 (int): The entity ID for the ending entity of the search path.
+    #         max_degree (int): The maximum number of degrees in paths between search entities.
+    #         flags (int, optional): Flags used to control information returned. Defaults to G2EngineFlags.G2_FIND_PATH_DEFAULT_FLAGS.
 
-        Returns:
-            str: A JSON document.
+    #     Returns:
+    #         str: A JSON document.
 
-        Raises:
+    #     Raises:
 
-        .. collapse:: Example:
+    #     .. collapse:: Example:
 
-            .. literalinclude:: ../../examples/g2engine/find_path_by_entity_id_v2.py
-                :linenos:
-                :language: python
+    #         .. literalinclude:: ../../examples/g2engine/find_path_by_entity_id_v2.py
+    #             :linenos:
+    #             :language: python
 
-            **Output:**
+    #         **Output:**
 
-            .. literalinclude:: ../../examples/g2engine/find_path_by_entity_id_v2.txt
-                :linenos:
-                :language: json
-        """
+    #         .. literalinclude:: ../../examples/g2engine/find_path_by_entity_id_v2.txt
+    #             :linenos:
+    #             :language: json
+    #     """
 
     @abstractmethod
     def find_path_by_entity_id(
@@ -808,47 +927,47 @@ class G2EngineAbstract(ABC):
         """
 
     # TODO: This should be going away in V4?
-    @abstractmethod
-    def find_path_by_record_id_v2(
-        self,
-        data_source_code_1: str,
-        record_id_1: str,
-        data_source_code_2: str,
-        record_id_2: str,
-        max_degree: int,
-        flags: int = G2EngineFlags.G2_FIND_PATH_DEFAULT_FLAGS,
-        **kwargs: Any,
-    ) -> str:
-        """
-        The `find_path_by_record_id_v2` method finds all entities surrounding a requested set of entities identified by record identifiers.
-        This includes the requested entities, paths between them, and relations to other nearby entities.
-        It extends `find_path_by_record_id` by adding output control flags.
+    # @abstractmethod
+    # def find_path_by_record_id_v2(
+    #     self,
+    #     data_source_code_1: str,
+    #     record_id_1: str,
+    #     data_source_code_2: str,
+    #     record_id_2: str,
+    #     max_degree: int,
+    #     flags: int = G2EngineFlags.G2_FIND_PATH_DEFAULT_FLAGS,
+    #     **kwargs: Any,
+    # ) -> str:
+    #     """
+    #     The `find_path_by_record_id_v2` method finds all entities surrounding a requested set of entities identified by record identifiers.
+    #     This includes the requested entities, paths between them, and relations to other nearby entities.
+    #     It extends `find_path_by_record_id` by adding output control flags.
 
-        Args:
-            data_source_code_1 (str): Identifies the provenance of the record for the starting entity of the search path.
-            record_id_1 (str): The unique identifier within the records of the same data source for the starting entity of the search path.
-            data_source_code_2 (str): Identifies the provenance of the record for the ending entity of the search path.
-            record_id_2 (str): The unique identifier within the records of the same data source for the ending entity of the search path.
-            max_degree (int): The maximum number of degrees in paths between search entities.
-            flags (int, optional): Flags used to control information returned. Defaults to G2EngineFlags.G2_FIND_PATH_DEFAULT_FLAGS.
+    #     Args:
+    #         data_source_code_1 (str): Identifies the provenance of the record for the starting entity of the search path.
+    #         record_id_1 (str): The unique identifier within the records of the same data source for the starting entity of the search path.
+    #         data_source_code_2 (str): Identifies the provenance of the record for the ending entity of the search path.
+    #         record_id_2 (str): The unique identifier within the records of the same data source for the ending entity of the search path.
+    #         max_degree (int): The maximum number of degrees in paths between search entities.
+    #         flags (int, optional): Flags used to control information returned. Defaults to G2EngineFlags.G2_FIND_PATH_DEFAULT_FLAGS.
 
-        Returns:
-            str: A JSON document.
+    #     Returns:
+    #         str: A JSON document.
 
-        Raises:
+    #     Raises:
 
-        .. collapse:: Example:
+    #     .. collapse:: Example:
 
-            .. literalinclude:: ../../examples/g2engine/find_path_by_record_id_v2.py
-                :linenos:
-                :language: python
+    #         .. literalinclude:: ../../examples/g2engine/find_path_by_record_id_v2.py
+    #             :linenos:
+    #             :language: python
 
-            **Output:**
+    #         **Output:**
 
-            .. literalinclude:: ../../examples/g2engine/find_path_by_record_id_v2.txt
-                :linenos:
-                :language: json
-        """
+    #         .. literalinclude:: ../../examples/g2engine/find_path_by_record_id_v2.txt
+    #             :linenos:
+    #             :language: json
+    #     """
 
     @abstractmethod
     def find_path_by_record_id(
@@ -897,46 +1016,46 @@ class G2EngineAbstract(ABC):
         """
 
     # TODO: This should be going away in V4?
-    @abstractmethod
-    def find_path_excluding_by_entity_id_v2(
-        self,
-        entity_id_1: int,
-        entity_id_2: int,
-        max_degree: int,
-        excluded_entities: str,
-        flags: int = G2EngineFlags.G2_FIND_PATH_DEFAULT_FLAGS,
-        **kwargs: Any,
-    ) -> str:
-        """
-        The `find_path_excluding_by_entity_id_v2` method finds single relationship paths between two entities.
-        Paths are found using known relationships with other entities.
-        In addition, it will find paths that exclude certain entities from being on the path.
-        It extends `find_path_excluding_by_entity_id` by adding output control flags.
+    # @abstractmethod
+    # def find_path_excluding_by_entity_id_v2(
+    #     self,
+    #     entity_id_1: int,
+    #     entity_id_2: int,
+    #     max_degree: int,
+    #     excluded_entities: str,
+    #     flags: int = G2EngineFlags.G2_FIND_PATH_DEFAULT_FLAGS,
+    #     **kwargs: Any,
+    # ) -> str:
+    #     """
+    #     The `find_path_excluding_by_entity_id_v2` method finds single relationship paths between two entities.
+    #     Paths are found using known relationships with other entities.
+    #     In addition, it will find paths that exclude certain entities from being on the path.
+    #     It extends `find_path_excluding_by_entity_id` by adding output control flags.
 
-        Args:
-            entity_id_1 (int): The entity ID for the starting entity of the search path.
-            entity_id_2 (int): The entity ID for the ending entity of the search path.
-            max_degree (int): The maximum number of degrees in paths between search entities.
-            excluded_entities (str): A JSON document listing entities that should be avoided on the path.
-            flags (int, optional): Flags used to control information returned. Defaults to G2EngineFlags.G2_FIND_PATH_DEFAULT_FLAGS.
+    #     Args:
+    #         entity_id_1 (int): The entity ID for the starting entity of the search path.
+    #         entity_id_2 (int): The entity ID for the ending entity of the search path.
+    #         max_degree (int): The maximum number of degrees in paths between search entities.
+    #         excluded_entities (str): A JSON document listing entities that should be avoided on the path.
+    #         flags (int, optional): Flags used to control information returned. Defaults to G2EngineFlags.G2_FIND_PATH_DEFAULT_FLAGS.
 
-        Returns:
-            str: A JSON document.
+    #     Returns:
+    #         str: A JSON document.
 
-        Raises:
+    #     Raises:
 
-        .. collapse:: Example:
+    #     .. collapse:: Example:
 
-            .. literalinclude:: ../../examples/g2engine/find_path_excluding_by_entity_id_v2.py
-                :linenos:
-                :language: python
+    #         .. literalinclude:: ../../examples/g2engine/find_path_excluding_by_entity_id_v2.py
+    #             :linenos:
+    #             :language: python
 
-            **Output:**
+    #         **Output:**
 
-            .. literalinclude:: ../../examples/g2engine/find_path_excluding_by_entity_id_v2.txt
-                :linenos:
-                :language: json
-        """
+    #         .. literalinclude:: ../../examples/g2engine/find_path_excluding_by_entity_id_v2.txt
+    #             :linenos:
+    #             :language: json
+    #     """
 
     @abstractmethod
     def find_path_excluding_by_entity_id(
@@ -944,7 +1063,8 @@ class G2EngineAbstract(ABC):
         entity_id_1: int,
         entity_id_2: int,
         max_degree: int,
-        excluded_entities: str,
+        # excluded_entities: str,
+        excluded_entities: Union[str, Dict[Any, Any]],
         flags: int = G2EngineFlags.G2_FIND_PATH_DEFAULT_FLAGS,
         **kwargs: Any,
     ) -> str:
@@ -987,55 +1107,55 @@ class G2EngineAbstract(ABC):
         """
 
     # TODO: This should be going away in V4?
-    @abstractmethod
-    def find_path_excluding_by_record_id_v2(
-        self,
-        data_source_code_1: str,
-        record_id_1: str,
-        data_source_code_2: str,
-        record_id_2: str,
-        max_degree: int,
-        excluded_records: str,
-        flags: int = G2EngineFlags.G2_FIND_PATH_DEFAULT_FLAGS,
-        **kwargs: Any,
-    ) -> str:
-        """
-        The `find_path_excluding_by_record_id_v2` method finds single relationship paths between two entities.
-        Paths are found using known relationships with other entities.
-        In addition, it will find paths that exclude certain entities from being on the path.
-        It extends `find_path_excluding_by_record_id` by adding output control flags.
+    # @abstractmethod
+    # def find_path_excluding_by_record_id_v2(
+    #     self,
+    #     data_source_code_1: str,
+    #     record_id_1: str,
+    #     data_source_code_2: str,
+    #     record_id_2: str,
+    #     max_degree: int,
+    #     excluded_records: str,
+    #     flags: int = G2EngineFlags.G2_FIND_PATH_DEFAULT_FLAGS,
+    #     **kwargs: Any,
+    # ) -> str:
+    #     """
+    #     The `find_path_excluding_by_record_id_v2` method finds single relationship paths between two entities.
+    #     Paths are found using known relationships with other entities.
+    #     In addition, it will find paths that exclude certain entities from being on the path.
+    #     It extends `find_path_excluding_by_record_id` by adding output control flags.
 
-        When excluding entities, the user may choose to either strictly exclude the entities,
-        or prefer to exclude the entities but still include them if no other path is found.
-        By default, entities will be strictly excluded.
-        A "preferred exclude" may be done by specifying the G2_FIND_PATH_PREFER_EXCLUDE control flag.
+    #     When excluding entities, the user may choose to either strictly exclude the entities,
+    #     or prefer to exclude the entities but still include them if no other path is found.
+    #     By default, entities will be strictly excluded.
+    #     A "preferred exclude" may be done by specifying the G2_FIND_PATH_PREFER_EXCLUDE control flag.
 
-        Args:
-            data_source_code_1 (str): Identifies the provenance of the record for the starting entity of the search path.
-            record_id_1 (str): The unique identifier within the records of the same data source for the starting entity of the search path.
-            data_source_code_2 (str): Identifies the provenance of the record for the ending entity of the search path.
-            record_id_2 (str): The unique identifier within the records of the same data source for the ending entity of the search path.
-            max_degree (int): The maximum number of degrees in paths between search entities.
-            excluded_records (str): A JSON document listing entities that should be avoided on the path.
-            flags (int, optional): Flags used to control information returned. Defaults to G2EngineFlags.G2_FIND_PATH_DEFAULT_FLAGS.
+    #     Args:
+    #         data_source_code_1 (str): Identifies the provenance of the record for the starting entity of the search path.
+    #         record_id_1 (str): The unique identifier within the records of the same data source for the starting entity of the search path.
+    #         data_source_code_2 (str): Identifies the provenance of the record for the ending entity of the search path.
+    #         record_id_2 (str): The unique identifier within the records of the same data source for the ending entity of the search path.
+    #         max_degree (int): The maximum number of degrees in paths between search entities.
+    #         excluded_records (str): A JSON document listing entities that should be avoided on the path.
+    #         flags (int, optional): Flags used to control information returned. Defaults to G2EngineFlags.G2_FIND_PATH_DEFAULT_FLAGS.
 
-        Returns:
-            str: A JSON document.
+    #     Returns:
+    #         str: A JSON document.
 
-        Raises:
+    #     Raises:
 
-        .. collapse:: Example:
+    #     .. collapse:: Example:
 
-            .. literalinclude:: ../../examples/g2engine/find_path_excluding_by_record_id_v2.py
-                :linenos:
-                :language: python
+    #         .. literalinclude:: ../../examples/g2engine/find_path_excluding_by_record_id_v2.py
+    #             :linenos:
+    #             :language: python
 
-            **Output:**
+    #         **Output:**
 
-            .. literalinclude:: ../../examples/g2engine/find_path_excluding_by_record_id_v2.txt
-                :linenos:
-                :language: json
-        """
+    #         .. literalinclude:: ../../examples/g2engine/find_path_excluding_by_record_id_v2.txt
+    #             :linenos:
+    #             :language: json
+    #     """
 
     @abstractmethod
     def find_path_excluding_by_record_id(
@@ -1045,7 +1165,8 @@ class G2EngineAbstract(ABC):
         data_source_code_2: str,
         record_id_2: str,
         max_degree: int,
-        excluded_records: str,
+        # excluded_records: str,
+        excluded_records: Union[str, Dict[Any, Any]],
         flags: int = G2EngineFlags.G2_FIND_PATH_DEFAULT_FLAGS,
         **kwargs: Any,
     ) -> str:
@@ -1090,49 +1211,49 @@ class G2EngineAbstract(ABC):
         """
 
     # TODO: This should be going away in V4?
-    @abstractmethod
-    def find_path_including_source_by_entity_id_v2(
-        self,
-        entity_id_1: int,
-        entity_id_2: int,
-        max_degree: int,
-        excluded_entities: str,
-        required_dsrcs: str,
-        flags: int = G2EngineFlags.G2_FIND_PATH_DEFAULT_FLAGS,
-        **kwargs: Any,
-    ) -> str:
-        """
-        The `find_path_including_source_by_entity_id_v2` method finds single relationship paths between two entities.
-        In addition, one of the enties along the path must include a specified data source.
-        Specific entities may also be excluded,
-        using the same methodology as the `find_path_excluding_by_entity_id_v2` and `find_path_excluding_by_record_id`.
-        It extends `find_path_including_source_by_entity_id` by adding output control flags.
+    # @abstractmethod
+    # def find_path_including_source_by_entity_id_v2(
+    #     self,
+    #     entity_id_1: int,
+    #     entity_id_2: int,
+    #     max_degree: int,
+    #     excluded_entities: str,
+    #     required_dsrcs: str,
+    #     flags: int = G2EngineFlags.G2_FIND_PATH_DEFAULT_FLAGS,
+    #     **kwargs: Any,
+    # ) -> str:
+    #     """
+    #     The `find_path_including_source_by_entity_id_v2` method finds single relationship paths between two entities.
+    #     In addition, one of the entities along the path must include a specified data source.
+    #     Specific entities may also be excluded,
+    #     using the same methodology as the `find_path_excluding_by_entity_id_v2` and `find_path_excluding_by_record_id`.
+    #     It extends `find_path_including_source_by_entity_id` by adding output control flags.
 
-        Args:
-            entity_id_1 (int): The entity ID for the starting entity of the search path.
-            entity_id_2 (int): The entity ID for the ending entity of the search path.
-            max_degree (int): The maximum number of degrees in paths between search entities.
-            excluded_entities (str): A JSON document listing entities that should be avoided on the path.
-            required_dsrcs (str): A JSON document listing data sources that should be included on the path.
-            flags (int, optional): Flags used to control information returned. Defaults to G2EngineFlags.G2_FIND_PATH_DEFAULT_FLAGS.
+    #     Args:
+    #         entity_id_1 (int): The entity ID for the starting entity of the search path.
+    #         entity_id_2 (int): The entity ID for the ending entity of the search path.
+    #         max_degree (int): The maximum number of degrees in paths between search entities.
+    #         excluded_entities (str): A JSON document listing entities that should be avoided on the path.
+    #         required_dsrcs (str): A JSON document listing data sources that should be included on the path.
+    #         flags (int, optional): Flags used to control information returned. Defaults to G2EngineFlags.G2_FIND_PATH_DEFAULT_FLAGS.
 
-        Returns:
-            str: A JSON document.
+    #     Returns:
+    #         str: A JSON document.
 
-        Raises:
+    #     Raises:
 
-        .. collapse:: Example:
+    #     .. collapse:: Example:
 
-            .. literalinclude:: ../../examples/g2engine/find_path_including_source_by_entity_id_v2.py
-                :linenos:
-                :language: python
+    #         .. literalinclude:: ../../examples/g2engine/find_path_including_source_by_entity_id_v2.py
+    #             :linenos:
+    #             :language: python
 
-            **Output:**
+    #         **Output:**
 
-            .. literalinclude:: ../../examples/g2engine/find_path_including_source_by_entity_id_v2.txt
-                :linenos:
-                :language: json
-        """
+    #         .. literalinclude:: ../../examples/g2engine/find_path_including_source_by_entity_id_v2.txt
+    #             :linenos:
+    #             :language: json
+    #     """
 
     @abstractmethod
     def find_path_including_source_by_entity_id(
@@ -1140,8 +1261,10 @@ class G2EngineAbstract(ABC):
         entity_id_1: int,
         entity_id_2: int,
         max_degree: int,
-        excluded_entities: str,
-        required_dsrcs: str,
+        # excluded_entities: str,
+        # required_dsrcs: str,
+        excluded_entities: Union[str, Dict[Any, Any]],
+        required_dsrcs: Union[str, Dict[Any, Any]],
         flags: int = G2EngineFlags.G2_FIND_PATH_DEFAULT_FLAGS,
         **kwargs: Any,
     ) -> str:
@@ -1187,53 +1310,53 @@ class G2EngineAbstract(ABC):
         """
 
     # TODO: This should be going away in V4?
-    @abstractmethod
-    def find_path_including_source_by_record_id_v2(
-        self,
-        data_source_code_1: str,
-        record_id_1: str,
-        data_source_code_2: str,
-        record_id_2: str,
-        max_degree: int,
-        excluded_records: str,
-        required_dsrcs: str,
-        flags: int = G2EngineFlags.G2_FIND_PATH_DEFAULT_FLAGS,
-        **kwargs: Any,
-    ) -> str:
-        """
-        The `find_path_including_source_by_record_id_v2` method finds single relationship paths between two entities.
-        In addition, one of the enties along the path must include a specified data source.
-        Specific entities may also be excluded,
-        using the same methodology as the `find_path_excluding_by_entity_id_v2` and `find_path_excluding_by_record_id_v2`.
-        It extends `find_path_including_source_by_record_id` by adding output control flags.
+    # @abstractmethod
+    # def find_path_including_source_by_record_id_v2(
+    #     self,
+    #     data_source_code_1: str,
+    #     record_id_1: str,
+    #     data_source_code_2: str,
+    #     record_id_2: str,
+    #     max_degree: int,
+    #     excluded_records: str,
+    #     required_dsrcs: str,
+    #     flags: int = G2EngineFlags.G2_FIND_PATH_DEFAULT_FLAGS,
+    #     **kwargs: Any,
+    # ) -> str:
+    #     """
+    #     The `find_path_including_source_by_record_id_v2` method finds single relationship paths between two entities.
+    #     In addition, one of the entities along the path must include a specified data source.
+    #     Specific entities may also be excluded,
+    #     using the same methodology as the `find_path_excluding_by_entity_id_v2` and `find_path_excluding_by_record_id_v2`.
+    #     It extends `find_path_including_source_by_record_id` by adding output control flags.
 
-        Args:
-            data_source_code_1 (str): Identifies the provenance of the record for the starting entity of the search path.
-            record_id_1 (str): The unique identifier within the records of the same data source for the starting entity of the search path.
-            data_source_code_2 (str): Identifies the provenance of the record for the ending entity of the search path.
-            record_id_2 (str): The unique identifier within the records of the same data source for the ending entity of the search path.
-            max_degree (int): The maximum number of degrees in paths between search entities.
-            excluded_records (str): A JSON document listing entities that should be avoided on the path.
-            required_dsrcs (str):  A JSON document listing data sources that should be included on the path.
-            flags (int, optional): Flags used to control information returned. Defaults to G2EngineFlags.G2_FIND_PATH_DEFAULT_FLAGS.
+    #     Args:
+    #         data_source_code_1 (str): Identifies the provenance of the record for the starting entity of the search path.
+    #         record_id_1 (str): The unique identifier within the records of the same data source for the starting entity of the search path.
+    #         data_source_code_2 (str): Identifies the provenance of the record for the ending entity of the search path.
+    #         record_id_2 (str): The unique identifier within the records of the same data source for the ending entity of the search path.
+    #         max_degree (int): The maximum number of degrees in paths between search entities.
+    #         excluded_records (str): A JSON document listing entities that should be avoided on the path.
+    #         required_dsrcs (str):  A JSON document listing data sources that should be included on the path.
+    #         flags (int, optional): Flags used to control information returned. Defaults to G2EngineFlags.G2_FIND_PATH_DEFAULT_FLAGS.
 
-        Returns:
-            str: A JSON document.
+    #     Returns:
+    #         str: A JSON document.
 
-        Raises:
+    #     Raises:
 
-        .. collapse:: Example:
+    #     .. collapse:: Example:
 
-            .. literalinclude:: ../../examples/g2engine/find_path_including_source_by_record_id_v2.py
-                :linenos:
-                :language: python
+    #         .. literalinclude:: ../../examples/g2engine/find_path_including_source_by_record_id_v2.py
+    #             :linenos:
+    #             :language: python
 
-            **Output:**
+    #         **Output:**
 
-            .. literalinclude:: ../../examples/g2engine/find_path_including_source_by_record_id_v2.txt
-                :linenos:
-                :language: json
-        """
+    #         .. literalinclude:: ../../examples/g2engine/find_path_including_source_by_record_id_v2.txt
+    #             :linenos:
+    #             :language: json
+    #     """
 
     @abstractmethod
     def find_path_including_source_by_record_id(
@@ -1243,8 +1366,10 @@ class G2EngineAbstract(ABC):
         data_source_code_2: str,
         record_id_2: str,
         max_degree: int,
-        excluded_records: str,
-        required_dsrcs: str,
+        # excluded_records: str,
+        # required_dsrcs: str,
+        excluded_records: Union[str, Dict[Any, Any]],
+        required_dsrcs: Union[str, Dict[Any, Any]],
         flags: int = G2EngineFlags.G2_FIND_PATH_DEFAULT_FLAGS,
         **kwargs: Any,
     ) -> str:
@@ -1316,38 +1441,38 @@ class G2EngineAbstract(ABC):
         """
 
     # TODO: This should be going away in V4?
-    @abstractmethod
-    def get_entity_by_entity_id_v2(
-        self,
-        entity_id: int,
-        flags: int = G2EngineFlags.G2_ENTITY_DEFAULT_FLAGS,
-        **kwargs: Any,
-    ) -> str:
-        """
-        The `get_entity_by_entity_id_v2` method returns entity data based on the ID of a resolved identity.
-        It extends `get_entity_by_entity_id` by adding output control flags.
+    # @abstractmethod
+    # def get_entity_by_entity_id_v2(
+    #     self,
+    #     entity_id: int,
+    #     flags: int = G2EngineFlags.G2_ENTITY_DEFAULT_FLAGS,
+    #     **kwargs: Any,
+    # ) -> str:
+    #     """
+    #     The `get_entity_by_entity_id_v2` method returns entity data based on the ID of a resolved identity.
+    #     It extends `get_entity_by_entity_id` by adding output control flags.
 
-        Args:
-            entity_id (int): The unique identifier of an entity.
-            flags (int, optional): Flags used to control information returned. Defaults to G2EngineFlags.G2_ENTITY_DEFAULT_FLAGS.
+    #     Args:
+    #         entity_id (int): The unique identifier of an entity.
+    #         flags (int, optional): Flags used to control information returned. Defaults to G2EngineFlags.G2_ENTITY_DEFAULT_FLAGS.
 
-        Returns:
-            str: A JSON document.
+    #     Returns:
+    #         str: A JSON document.
 
-        Raises:
+    #     Raises:
 
-        .. collapse:: Example:
+    #     .. collapse:: Example:
 
-            .. literalinclude:: ../../examples/g2engine/get_entity_by_entity_id_v2.py
-                :linenos:
-                :language: python
+    #         .. literalinclude:: ../../examples/g2engine/get_entity_by_entity_id_v2.py
+    #             :linenos:
+    #             :language: python
 
-            **Output:**
+    #         **Output:**
 
-            .. literalinclude:: ../../examples/g2engine/get_entity_by_entity_id_v2.txt
-                :linenos:
-                :language: json
-        """
+    #         .. literalinclude:: ../../examples/g2engine/get_entity_by_entity_id_v2.txt
+    #             :linenos:
+    #             :language: json
+    #     """
 
     @abstractmethod
     def get_entity_by_entity_id(
@@ -1383,40 +1508,40 @@ class G2EngineAbstract(ABC):
         """
 
     # TODO: This should be going away in V4?
-    @abstractmethod
-    def get_entity_by_record_id_v2(
-        self,
-        data_source_code: str,
-        record_id: str,
-        flags: int = G2EngineFlags.G2_ENTITY_DEFAULT_FLAGS,
-        **kwargs: Any,
-    ) -> str:
-        """
-        The `get_entity_by_record_id_v2` method returns entity data based on the ID of a record which is a member of the entity.
-        It extends `get_entity_by_record_id` by adding output control flags.
+    # @abstractmethod
+    # def get_entity_by_record_id_v2(
+    #     self,
+    #     data_source_code: str,
+    #     record_id: str,
+    #     flags: int = G2EngineFlags.G2_ENTITY_DEFAULT_FLAGS,
+    #     **kwargs: Any,
+    # ) -> str:
+    #     """
+    #     The `get_entity_by_record_id_v2` method returns entity data based on the ID of a record which is a member of the entity.
+    #     It extends `get_entity_by_record_id` by adding output control flags.
 
-        Args:
-            data_source_code (str): Identifies the provenance of the data.
-            record_id (str): The unique identifier within the records of the same data source.
-            flags (int, optional): Flags used to control information returned. Defaults to G2EngineFlags.G2_ENTITY_DEFAULT_FLAGS.
+    #     Args:
+    #         data_source_code (str): Identifies the provenance of the data.
+    #         record_id (str): The unique identifier within the records of the same data source.
+    #         flags (int, optional): Flags used to control information returned. Defaults to G2EngineFlags.G2_ENTITY_DEFAULT_FLAGS.
 
-        Returns:
-            str: A JSON document.
+    #     Returns:
+    #         str: A JSON document.
 
-        Raises:
+    #     Raises:
 
-        .. collapse:: Example:
+    #     .. collapse:: Example:
 
-            .. literalinclude:: ../../examples/g2engine/get_entity_by_record_id_v2.py
-                :linenos:
-                :language: python
+    #         .. literalinclude:: ../../examples/g2engine/get_entity_by_record_id_v2.py
+    #             :linenos:
+    #             :language: python
 
-            **Output:**
+    #         **Output:**
 
-            .. literalinclude:: ../../examples/g2engine/get_entity_by_record_id_v2.txt
-                :linenos:
-                :language: json
-        """
+    #         .. literalinclude:: ../../examples/g2engine/get_entity_by_record_id_v2.txt
+    #             :linenos:
+    #             :language: json
+    #     """
 
     @abstractmethod
     def get_entity_by_record_id(
@@ -1454,41 +1579,41 @@ class G2EngineAbstract(ABC):
         """
 
     # TODO: This should be going away in V4?
-    @abstractmethod
-    def get_record_v2(
-        self,
-        data_source_code: str,
-        record_id: str,
-        flags: int = G2EngineFlags.G2_RECORD_DEFAULT_FLAGS,
-        **kwargs: Any,
-    ) -> str:
-        """
-        The `get_record_v2` method returns a JSON document of a single record from the Senzing repository.
-        It extends `get_record` by adding output control flags.
-        Can be called as many times as desired and from multiple threads at the same time.
+    # @abstractmethod
+    # def get_record_v2(
+    #     self,
+    #     data_source_code: str,
+    #     record_id: str,
+    #     flags: int = G2EngineFlags.G2_RECORD_DEFAULT_FLAGS,
+    #     **kwargs: Any,
+    # ) -> str:
+    #     """
+    #     The `get_record_v2` method returns a JSON document of a single record from the Senzing repository.
+    #     It extends `get_record` by adding output control flags.
+    #     Can be called as many times as desired and from multiple threads at the same time.
 
-        Args:
-            data_source_code (str): Identifies the provenance of the data.
-            record_id (str): The unique identifier within the records of the same data source.
-            flags (int, optional): Flags used to control information returned. Defaults to G2EngineFlags.G2_RECORD_DEFAULT_FLAGS.
+    #     Args:
+    #         data_source_code (str): Identifies the provenance of the data.
+    #         record_id (str): The unique identifier within the records of the same data source.
+    #         flags (int, optional): Flags used to control information returned. Defaults to G2EngineFlags.G2_RECORD_DEFAULT_FLAGS.
 
-        Returns:
-            str: A JSON document.
+    #     Returns:
+    #         str: A JSON document.
 
-        Raises:
+    #     Raises:
 
-        .. collapse:: Example:
+    #     .. collapse:: Example:
 
-            .. literalinclude:: ../../examples/g2engine/get_record_v2.py
-                :linenos:
-                :language: python
+    #         .. literalinclude:: ../../examples/g2engine/get_record_v2.py
+    #             :linenos:
+    #             :language: python
 
-            **Output:**
+    #         **Output:**
 
-            .. literalinclude:: ../../examples/g2engine/get_record_v2.txt
-                :linenos:
-                :language: json
-        """
+    #         .. literalinclude:: ../../examples/g2engine/get_record_v2.txt
+    #             :linenos:
+    #             :language: json
+    #     """
 
     @abstractmethod
     def get_record(
@@ -1576,43 +1701,44 @@ class G2EngineAbstract(ABC):
         """
 
     # TODO: This should be going away in V4?
-    @abstractmethod
-    def get_virtual_entity_by_record_id_v2(
-        self,
-        record_list: str,
-        flags: int = G2EngineFlags.G2_HOW_ENTITY_DEFAULT_FLAGS,
-        **kwargs: Any,
-    ) -> str:
-        """
-        TODO: The `get_virtual_entity_by_record_id_v2` method...
-        It extends `get_virtual_entity_by_record_id` by adding output control flags.
+    # @abstractmethod
+    # def get_virtual_entity_by_record_id_v2(
+    #     self,
+    #     record_list: str,
+    #     flags: int = G2EngineFlags.G2_HOW_ENTITY_DEFAULT_FLAGS,
+    #     **kwargs: Any,
+    # ) -> str:
+    #     """
+    #     TODO: The `get_virtual_entity_by_record_id_v2` method...
+    #     It extends `get_virtual_entity_by_record_id` by adding output control flags.
 
-        Args:
-            record_list (str): A JSON document of one or more records by DATA_SOURCE and RECORD_ID pairs, formatted as `{"RECORDS":[{"DATA_SOURCE":"DS1","RECORD_ID":"R1"},{"DATA_SOURCE":"DS2","RECORD_ID":"R2"}]}`.
-            flags (int, optional): Flags used to control information returned. Defaults to G2EngineFlags.G2_HOW_ENTITY_DEFAULT_FLAGS.
+    #     Args:
+    #         record_list (str): A JSON document of one or more records by DATA_SOURCE and RECORD_ID pairs, formatted as `{"RECORDS":[{"DATA_SOURCE":"DS1","RECORD_ID":"R1"},{"DATA_SOURCE":"DS2","RECORD_ID":"R2"}]}`.
+    #         flags (int, optional): Flags used to control information returned. Defaults to G2EngineFlags.G2_HOW_ENTITY_DEFAULT_FLAGS.
 
-        Returns:
-            str: A JSON document.
+    #     Returns:
+    #         str: A JSON document.
 
-        Raises:
+    #     Raises:
 
-        .. collapse:: Example:
+    #     .. collapse:: Example:
 
-            .. literalinclude:: ../../examples/g2engine/get_virtual_entity_by_record_id_v2.py
-                :linenos:
-                :language: python
+    #         .. literalinclude:: ../../examples/g2engine/get_virtual_entity_by_record_id_v2.py
+    #             :linenos:
+    #             :language: python
 
-            **Output:**
+    #         **Output:**
 
-            .. literalinclude:: ../../examples/g2engine/get_virtual_entity_by_record_id_v2.txt
-                :linenos:
-                :language: json
-        """
+    #         .. literalinclude:: ../../examples/g2engine/get_virtual_entity_by_record_id_v2.txt
+    #             :linenos:
+    #             :language: json
+    #     """
 
     @abstractmethod
     def get_virtual_entity_by_record_id(
         self,
-        record_list: str,
+        # record_list: str,
+        record_list: Union[str, Dict[Any, Any]],
         flags: int = G2EngineFlags.G2_HOW_ENTITY_DEFAULT_FLAGS,
         **kwargs: Any,
     ) -> str:
@@ -1646,38 +1772,38 @@ class G2EngineAbstract(ABC):
         """
 
     # TODO: This should be going away in V4?
-    @abstractmethod
-    def how_entity_by_entity_id_v2(
-        self,
-        entity_id: int,
-        flags: int = G2EngineFlags.G2_HOW_ENTITY_DEFAULT_FLAGS,
-        **kwargs: Any,
-    ) -> str:
-        """
-        TODO: The `how_entity_by_entity_id_v2` method...
-        It extends `how_entity_by_entity_id` by adding output control flags.
+    # @abstractmethod
+    # def how_entity_by_entity_id_v2(
+    #     self,
+    #     entity_id: int,
+    #     flags: int = G2EngineFlags.G2_HOW_ENTITY_DEFAULT_FLAGS,
+    #     **kwargs: Any,
+    # ) -> str:
+    #     """
+    #     TODO: The `how_entity_by_entity_id_v2` method...
+    #     It extends `how_entity_by_entity_id` by adding output control flags.
 
-        Args:
-            entity_id (int): The unique identifier of an entity.
-            flags (int, optional): Flags used to control information returned. Defaults to G2EngineFlags.G2_HOW_ENTITY_DEFAULT_FLAGS.
+    #     Args:
+    #         entity_id (int): The unique identifier of an entity.
+    #         flags (int, optional): Flags used to control information returned. Defaults to G2EngineFlags.G2_HOW_ENTITY_DEFAULT_FLAGS.
 
-        Returns:
-            str:  A JSON document.
+    #     Returns:
+    #         str:  A JSON document.
 
-        Raises:
+    #     Raises:
 
-        .. collapse:: Example:
+    #     .. collapse:: Example:
 
-            .. literalinclude:: ../../examples/g2engine/how_entity_by_entity_id_v2.py
-                :linenos:
-                :language: python
+    #         .. literalinclude:: ../../examples/g2engine/how_entity_by_entity_id_v2.py
+    #             :linenos:
+    #             :language: python
 
-            **Output:**
+    #         **Output:**
 
-            .. literalinclude:: ../../examples/g2engine/how_entity_by_entity_id_v2.txt
-                :linenos:
-                :language: json
-        """
+    #         .. literalinclude:: ../../examples/g2engine/how_entity_by_entity_id_v2.txt
+    #             :linenos:
+    #             :language: json
+    #     """
 
     @abstractmethod
     def how_entity_by_entity_id(
@@ -1717,7 +1843,12 @@ class G2EngineAbstract(ABC):
 
     @abstractmethod
     def init(
-        self, module_name: str, ini_params: str, verbose_logging: int = 0, **kwargs: Any
+        # self, module_name: str, ini_params: str, verbose_logging: int = 0, **kwargs: Any
+        self,
+        module_name: str,
+        ini_params: Union[str, Dict[Any, Any]],
+        verbose_logging: int = 0,
+        **kwargs: Any,
     ) -> None:
         """
         The `init` method initializes the Senzing G2Engine object.
@@ -1752,7 +1883,8 @@ class G2EngineAbstract(ABC):
     def init_with_config_id(
         self,
         module_name: str,
-        ini_params: str,
+        # ini_params: str,
+        ini_params: Union[str, Dict[Any, Any]],
         init_config_id: int,
         verbose_logging: int = 0,
         **kwargs: Any,
@@ -1794,7 +1926,7 @@ class G2EngineAbstract(ABC):
         The `prime_engine` method Initializes high resource consumption components of Senzing
         used in some functions. If this call is not made, these resources are initialized the
         first time they are needed and can cause unusually long processing times the first time
-        a function is called that requries these resources.
+        a function is called that requires these resources.
 
         Raises:
 
@@ -1806,7 +1938,8 @@ class G2EngineAbstract(ABC):
         """
 
     @abstractmethod
-    def process(self, record: str, **kwargs: Any) -> None:
+    # def process(self, record: str, **kwargs: Any) -> None:
+    def process(self, record: Union[str, Dict[Any, Any]], **kwargs: Any) -> None:
         """
         The `process` method processes the redo record.
         Usually the redo record is retrieved with `get_redo_record`.
@@ -1824,7 +1957,10 @@ class G2EngineAbstract(ABC):
         """
 
     @abstractmethod
-    def process_with_info(self, record: str, flags: int, **kwargs: Any) -> str:
+    # def process_with_info(self, record: str, flags: int, **kwargs: Any) -> str:
+    def process_with_info(
+        self, record: Union[str, Dict[Any, Any]], flags: int, **kwargs: Any
+    ) -> str:
         """_summary_
         The `process_with_info` method processes the redo record
         and returns a JSON document containing the ENTITY_ID values of the affected entities.
@@ -1995,7 +2131,8 @@ class G2EngineAbstract(ABC):
         self,
         data_source_code: str,
         record_id: str,
-        json_data: str,
+        # json_data: str,
+        json_data: Union[str, Dict[Any, Any]],
         # TODO: load_id is no longer used, being removed from V4 C api?
         load_id: str = "",
         **kwargs: Any,
@@ -2024,7 +2161,8 @@ class G2EngineAbstract(ABC):
         self,
         data_source_code: str,
         record_id: str,
-        json_data: str,
+        # json_data: str,
+        json_data: Union[str, Dict[Any, Any]],
         # TODO: load_id is no longer used, being removed from V4 C api?
         load_id: str = "",
         flags: int = 0,
@@ -2061,79 +2199,80 @@ class G2EngineAbstract(ABC):
         """
 
     # TODO: This should be going away in V4?
-    @abstractmethod
-    def search_by_attributes_v2(
-        self,
-        json_data: str,
-        flags: int = G2EngineFlags.G2_SEARCH_BY_ATTRIBUTES_DEFAULT_FLAGS,
-        **kwargs: Any,
-    ) -> str:
-        """
-        The `search_by_attributes_v2` method retrieves entity data based on a user-specified set of entity attributes.
-        It extends `search_by_attributes` by adding output control flags.
+    # @abstractmethod
+    # def search_by_attributes_v2(
+    #     self,
+    #     json_data: str,
+    #     flags: int = G2EngineFlags.G2_SEARCH_BY_ATTRIBUTES_DEFAULT_FLAGS,
+    #     **kwargs: Any,
+    # ) -> str:
+    #     """
+    #     The `search_by_attributes_v2` method retrieves entity data based on a user-specified set of entity attributes.
+    #     It extends `search_by_attributes` by adding output control flags.
 
-        Args:
-            json_data (str): TODO:
-            flags (int, optional): Flags used to control information returned. Defaults to G2EngineFlags.G2_SEARCH_BY_ATTRIBUTES_DEFAULT_FLAGS.
+    #     Args:
+    #         json_data (str): TODO:
+    #         flags (int, optional): Flags used to control information returned. Defaults to G2EngineFlags.G2_SEARCH_BY_ATTRIBUTES_DEFAULT_FLAGS.
 
-        Returns:
-            str: A JSON document.
+    #     Returns:
+    #         str: A JSON document.
 
-        Raises:
+    #     Raises:
 
-        .. collapse:: Example:
+    #     .. collapse:: Example:
 
-            .. literalinclude:: ../../examples/g2engine/search_by_attributes_v2.py
-                :linenos:
-                :language: python
+    #         .. literalinclude:: ../../examples/g2engine/search_by_attributes_v2.py
+    #             :linenos:
+    #             :language: python
 
-            **Output:**
+    #         **Output:**
 
-            .. literalinclude:: ../../examples/g2engine/search_by_attributes_v2.txt
-                :linenos:
-                :language: json
-        """
+    #         .. literalinclude:: ../../examples/g2engine/search_by_attributes_v2.txt
+    #             :linenos:
+    #             :language: json
+    #     """
 
     # TODO: This should be going away in V4?
-    @abstractmethod
-    def search_by_attributes_v3(
-        self,
-        json_data: str,
-        search_profile: str,
-        flags: int = G2EngineFlags.G2_SEARCH_BY_ATTRIBUTES_DEFAULT_FLAGS,
-        **kwargs: Any,
-    ) -> str:
-        """
-        The `search_by_attributes_v3` method retrieves entity data based on a user-specified set of entity attributes.
-        It extends `search_by_attributes` by adding output control flags and supporting a `search_profile`.
+    # @abstractmethod
+    # def search_by_attributes_v3(
+    #     self,
+    #     json_data: str,
+    #     search_profile: str,
+    #     flags: int = G2EngineFlags.G2_SEARCH_BY_ATTRIBUTES_DEFAULT_FLAGS,
+    #     **kwargs: Any,
+    # ) -> str:
+    #     """
+    #     The `search_by_attributes_v3` method retrieves entity data based on a user-specified set of entity attributes.
+    #     It extends `search_by_attributes` by adding output control flags and supporting a `search_profile`.
 
-        Args:
-            json_data (str): TODO:
-            search_profile (str): TODO:
-            flags (int, optional): Flags used to control information returned. Defaults to G2EngineFlags.G2_SEARCH_BY_ATTRIBUTES_DEFAULT_FLAGS.
+    #     Args:
+    #         json_data (str): TODO:
+    #         search_profile (str): TODO:
+    #         flags (int, optional): Flags used to control information returned. Defaults to G2EngineFlags.G2_SEARCH_BY_ATTRIBUTES_DEFAULT_FLAGS.
 
-        Returns:
-            str: A JSON document.
+    #     Returns:
+    #         str: A JSON document.
 
-        Raises:
+    #     Raises:
 
-        .. collapse:: Example:
+    #     .. collapse:: Example:
 
-            .. literalinclude:: ../../examples/g2engine/search_by_attributes_v3.py
-                :linenos:
-                :language: python
+    #         .. literalinclude:: ../../examples/g2engine/search_by_attributes_v3.py
+    #             :linenos:
+    #             :language: python
 
-            **Output:**
+    #         **Output:**
 
-            .. literalinclude:: ../../examples/g2engine/search_by_attributes_v3.txt
-                :linenos:
-                :language: json
-        """
+    #         .. literalinclude:: ../../examples/g2engine/search_by_attributes_v3.txt
+    #             :linenos:
+    #             :language: json
+    #     """
 
     @abstractmethod
     def search_by_attributes(
         self,
-        json_data: str,
+        # json_data: str,
+        json_data: Union[str, Dict[Any, Any]],
         flags: int = G2EngineFlags.G2_SEARCH_BY_ATTRIBUTES_DEFAULT_FLAGS,
         **kwargs: Any,
     ) -> str:
@@ -2188,43 +2327,43 @@ class G2EngineAbstract(ABC):
                 :language: json
         """
 
-    @abstractmethod
-    def why_entities_v2(
-        self,
-        entity_id_1: int,
-        entity_id_2: int,
-        flags: int = G2EngineFlags.G2_WHY_ENTITY_DEFAULT_FLAGS,
-        **kwargs: Any,
-    ) -> str:
-        """
-        The `why_entities_v2` method explains why records belong to their resolved entities.
-        `why_entities_v2` will compare the record data within an entity
-        against the rest of the entity data and show why they are connected.
-        This is calculated based on the features that record data represents.
-        It extends `why_entities` by adding output control flags.
+    # @abstractmethod
+    # def why_entities_v2(
+    #     self,
+    #     entity_id_1: int,
+    #     entity_id_2: int,
+    #     flags: int = G2EngineFlags.G2_WHY_ENTITY_DEFAULT_FLAGS,
+    #     **kwargs: Any,
+    # ) -> str:
+    #     """
+    #     The `why_entities_v2` method explains why records belong to their resolved entities.
+    #     `why_entities_v2` will compare the record data within an entity
+    #     against the rest of the entity data and show why they are connected.
+    #     This is calculated based on the features that record data represents.
+    #     It extends `why_entities` by adding output control flags.
 
-        Args:
-            entity_id_1 (int): The entity ID for the starting entity of the search path.
-            entity_id_2 (int): The entity ID for the ending entity of the search path.
-            flags (int, optional): Flags used to control information returned. Defaults to G2EngineFlags.G2_WHY_ENTITY_DEFAULT_FLAGS.
+    #     Args:
+    #         entity_id_1 (int): The entity ID for the starting entity of the search path.
+    #         entity_id_2 (int): The entity ID for the ending entity of the search path.
+    #         flags (int, optional): Flags used to control information returned. Defaults to G2EngineFlags.G2_WHY_ENTITY_DEFAULT_FLAGS.
 
-        Returns:
-            str: A JSON document.
+    #     Returns:
+    #         str: A JSON document.
 
-        Raises:
+    #     Raises:
 
-        .. collapse:: Example:
+    #     .. collapse:: Example:
 
-            .. literalinclude:: ../../examples/g2engine/why_entities_v2.py
-                :linenos:
-                :language: python
+    #         .. literalinclude:: ../../examples/g2engine/why_entities_v2.py
+    #             :linenos:
+    #             :language: python
 
-            **Output:**
+    #         **Output:**
 
-            .. literalinclude:: ../../examples/g2engine/why_entities_v2.txt
-                :linenos:
-                :language: json
-        """
+    #         .. literalinclude:: ../../examples/g2engine/why_entities_v2.txt
+    #             :linenos:
+    #             :language: json
+    #     """
 
     @abstractmethod
     def why_entities(
@@ -2263,208 +2402,210 @@ class G2EngineAbstract(ABC):
         """
 
     # TODO: This should be going away in V4?
-    @abstractmethod
-    def why_entity_by_entity_id_v2(
-        self,
-        entity_id: str,
-        flags: int = G2EngineFlags.G2_WHY_ENTITY_DEFAULT_FLAGS,
-        **kwargs: Any,
-    ) -> str:
-        """
-        The `why_entity_by_entity_id_v2` method explains why records belong to their resolved entities.
-        It extends `why_entity_by_entity_id` by adding output control flags.
+    # @abstractmethod
+    # def why_entity_by_entity_id_v2(
+    #     self,
+    #     entity_id: str,
+    #     flags: int = G2EngineFlags.G2_WHY_ENTITY_DEFAULT_FLAGS,
+    #     **kwargs: Any,
+    # ) -> str:
+    #     """
+    #     The `why_entity_by_entity_id_v2` method explains why records belong to their resolved entities.
+    #     It extends `why_entity_by_entity_id` by adding output control flags.
 
-        Args:
-            entity_id (str): The unique identifier of an entity for the starting entity of the search path.
-            flags (int, optional): Flags used to control information returned. Defaults to G2EngineFlags.G2_WHY_ENTITY_DEFAULT_FLAGS.
+    #     Args:
+    #         entity_id (str): The unique identifier of an entity for the starting entity of the search path.
+    #         flags (int, optional): Flags used to control information returned. Defaults to G2EngineFlags.G2_WHY_ENTITY_DEFAULT_FLAGS.
 
-        Returns:
-            str: A JSON document.
+    #     Returns:
+    #         str: A JSON document.
 
-        Raises:
+    #     Raises:
 
-        .. collapse:: Example:
+    #     .. collapse:: Example:
 
-            .. literalinclude:: ../../examples/g2engine/why_entity_by_entity_id_v2.py
-                :linenos:
-                :language: python
+    #         .. literalinclude:: ../../examples/g2engine/why_entity_by_entity_id_v2.py
+    #             :linenos:
+    #             :language: python
 
-            **Output:**
+    #         **Output:**
 
-            .. literalinclude:: ../../examples/g2engine/why_entity_by_entity_id_v2.txt
-                :linenos:
-                :language: json
-        """
+    #         .. literalinclude:: ../../examples/g2engine/why_entity_by_entity_id_v2.txt
+    #             :linenos:
+    #             :language: json
+    #     """
 
-    @abstractmethod
-    def why_entity_by_entity_id(
-        self,
-        entity_id: int,
-        flags: int = G2EngineFlags.G2_WHY_ENTITY_DEFAULT_FLAGS,
-        **kwargs: Any,
-    ) -> str:
-        """
-        The `why_entity_by_entity_id` method determines *why* records resolved to an ENTITY_ID.
-        Returns a JSON document that gives the results of the record analysis.
+    # NOTE Being removed in V4
+    # @abstractmethod
+    # def why_entity_by_entity_id(
+    #     self,
+    #     entity_id: int,
+    #     flags: int = G2EngineFlags.G2_WHY_ENTITY_DEFAULT_FLAGS,
+    #     **kwargs: Any,
+    # ) -> str:
+    #     """
+    #     The `why_entity_by_entity_id` method determines *why* records resolved to an ENTITY_ID.
+    #     Returns a JSON document that gives the results of the record analysis.
 
-        It has a “WHY_KEY”, which is similar to a match key, in defining the relevant connected data.
-        It shows candidate keys for features that initially cause the records to be analyzed for a relationship,
-        plus a series of feature scores that show how similar the feature data was.
+    #     It has a “WHY_KEY”, which is similar to a match key, in defining the relevant connected data.
+    #     It shows candidate keys for features that initially cause the records to be analyzed for a relationship,
+    #     plus a series of feature scores that show how similar the feature data was.
 
-        The response JSON document also contains a separate ENTITIES section,
-        with the full information about the resolved entity.
+    #     The response JSON document also contains a separate ENTITIES section,
+    #     with the full information about the resolved entity.
 
-        The recommended composite flag is G2_WHY_ENTITY_DEFAULT_FLAGS.
-        Additional recommended flags are G2_ENTITY_OPTION_INCLUDE_INTERNAL_FEATURES and G2_ENTITY_OPTION_INCLUDE_FEATURE_STATS,
-        which provide detailed feature data that is useful for understanding the WHY_RESULTS data.
+    #     The recommended composite flag is G2_WHY_ENTITY_DEFAULT_FLAGS.
+    #     Additional recommended flags are G2_ENTITY_OPTION_INCLUDE_INTERNAL_FEATURES and G2_ENTITY_OPTION_INCLUDE_FEATURE_STATS,
+    #     which provide detailed feature data that is useful for understanding the WHY_RESULTS data.
 
-        To control output, use `why_entity_by_entity_id_v2` instead.
+    #     To control output, use `why_entity_by_entity_id_v2` instead.
 
-        Args:
-            entity_id (int): The unique identifier of an entity for the starting entity of the search path.
-            flags (int, optional): Flags used to control information returned. Defaults to G2EngineFlags.G2_WHY_ENTITY_DEFAULT_FLAGS.
+    #     Args:
+    #         entity_id (int): The unique identifier of an entity for the starting entity of the search path.
+    #         flags (int, optional): Flags used to control information returned. Defaults to G2EngineFlags.G2_WHY_ENTITY_DEFAULT_FLAGS.
 
-        Returns:
-            str: A JSON document.
+    #     Returns:
+    #         str: A JSON document.
 
-        Raises:
+    #     Raises:
 
-        .. collapse:: Example:
+    #     .. collapse:: Example:
 
-            .. literalinclude:: ../../examples/g2engine/why_entity_by_entity_id.py
-                :linenos:
-                :language: python
+    #         .. literalinclude:: ../../examples/g2engine/why_entity_by_entity_id.py
+    #             :linenos:
+    #             :language: python
 
-            **Output:**
+    #         **Output:**
 
-            .. literalinclude:: ../../examples/g2engine/why_entity_by_entity_id.txt
-                :linenos:
-                :language: json
-        """
-
-    # TODO: This should be going away in V4?
-    @abstractmethod
-    def why_entity_by_record_id_v2(
-        self,
-        data_source_code: str,
-        record_id: str,
-        flags: int = G2EngineFlags.G2_WHY_ENTITY_DEFAULT_FLAGS,
-        **kwargs: Any,
-    ) -> str:
-        """
-        The `why_entity_by_record_id_v2` method explains why records belong to their resolved entities.
-        It extends `why_entity_by_record_id` by adding output control flags.
-
-        Args:
-            data_source_code (str): Identifies the provenance of the data.
-            record_id (str): The unique identifier within the records of the same data source.
-            flags (int, optional): Flags used to control information returned. Defaults to G2EngineFlags.G2_WHY_ENTITY_DEFAULT_FLAGS.
-
-        Returns:
-            str: A JSON document.
-
-        Raises:
-
-        .. collapse:: Example:
-
-            .. literalinclude:: ../../examples/g2engine/why_entity_by_record_id_v2.py
-                :linenos:
-                :language: python
-
-            **Output:**
-
-            .. literalinclude:: ../../examples/g2engine/why_entity_by_record_id_v2.txt
-                :linenos:
-                :language: json
-        """
-
-    @abstractmethod
-    def why_entity_by_record_id(
-        self,
-        data_source_code: str,
-        record_id: str,
-        flags: int = G2EngineFlags.G2_WHY_ENTITY_DEFAULT_FLAGS,
-        **kwargs: Any,
-    ) -> str:
-        """
-        The `why_entity_by_record_id` method determines *why* records resolved to an ENTITY_ID by a RECORD_ID.
-        Returns a JSON document that gives the results of the record analysis.
-
-        It has a “WHY_KEY”, which is similar to a match key, in defining the relevant connected data.
-        It shows candidate keys for features that initially cause the records to be analyzed for a relationship,
-        plus a series of feature scores that show how similar the feature data was.
-
-        The response JSON document also contains a separate ENTITIES section,
-        with the full information about the resolved entity.
-
-        The recommended composite flag is G2_WHY_ENTITY_DEFAULT_FLAGS.
-        Additional recommended flags are G2_ENTITY_OPTION_INCLUDE_INTERNAL_FEATURES and G2_ENTITY_OPTION_INCLUDE_FEATURE_STATS,
-        which provide detailed feature data that is useful for understanding the WHY_RESULTS data.
-
-        To control output, use `why_entity_by_record_id_v2` instead.
-
-        Args:
-            data_source_code (str): Identifies the provenance of the data.
-            record_id (str): The unique identifier within the records of the same data source.
-            flags (int, optional): Flags used to control information returned. Defaults to G2EngineFlags.G2_WHY_ENTITY_DEFAULT_FLAGS.
-
-        Returns:
-            str: A JSON document.
-
-        Raises:
-
-        .. collapse:: Example:
-
-            .. literalinclude:: ../../examples/g2engine/why_entity_by_record_id.py
-                :linenos:
-                :language: python
-
-            **Output:**
-
-            .. literalinclude:: ../../examples/g2engine/why_entity_by_record_id.txt
-                :linenos:
-                :language: json
-        """
+    #         .. literalinclude:: ../../examples/g2engine/why_entity_by_entity_id.txt
+    #             :linenos:
+    #             :language: json
+    #     """
 
     # TODO: This should be going away in V4?
-    @abstractmethod
-    def why_records_v2(
-        self,
-        data_source_code_1: str,
-        record_id_1: str,
-        data_source_code_2: str,
-        record_id_2: str,
-        flags: int = G2EngineFlags.G2_WHY_ENTITY_DEFAULT_FLAGS,
-        **kwargs: Any,
-    ) -> str:
-        """
-        The `why_records_v2` determines if any two records can or cannot resolve together, or if they relate.
-        It extends `why_records` by adding output control flags.
+    # @abstractmethod
+    # def why_entity_by_record_id_v2(
+    #     self,
+    #     data_source_code: str,
+    #     record_id: str,
+    #     flags: int = G2EngineFlags.G2_WHY_ENTITY_DEFAULT_FLAGS,
+    #     **kwargs: Any,
+    # ) -> str:
+    #     """
+    #     The `why_entity_by_record_id_v2` method explains why records belong to their resolved entities.
+    #     It extends `why_entity_by_record_id` by adding output control flags.
 
-        Args:
-            data_source_code_1 (str): Identifies the provenance of the data.
-            record_id_1 (str): The unique identifier within the records of the same data source.
-            data_source_code_2 (str): Identifies the provenance of the data.
-            record_id_2 (str): The unique identifier within the records of the same data source.
-            flags (int, optional): Flags used to control information returned. Defaults to G2EngineFlags.G2_WHY_ENTITY_DEFAULT_FLAGS.
+    #     Args:
+    #         data_source_code (str): Identifies the provenance of the data.
+    #         record_id (str): The unique identifier within the records of the same data source.
+    #         flags (int, optional): Flags used to control information returned. Defaults to G2EngineFlags.G2_WHY_ENTITY_DEFAULT_FLAGS.
 
-        Returns:
-            str: A JSON document.
+    #     Returns:
+    #         str: A JSON document.
 
-        Raises:
+    #     Raises:
 
-        .. collapse:: Example:
+    #     .. collapse:: Example:
 
-            .. literalinclude:: ../../examples/g2engine/why_entity_by_record_id.py
-                :linenos:
-                :language: python
+    #         .. literalinclude:: ../../examples/g2engine/why_entity_by_record_id_v2.py
+    #             :linenos:
+    #             :language: python
 
-            **Output:**
+    #         **Output:**
 
-            .. literalinclude:: ../../examples/g2engine/why_entity_by_record_id.txt
-                :linenos:
-                :language: json
-        """
+    #         .. literalinclude:: ../../examples/g2engine/why_entity_by_record_id_v2.txt
+    #             :linenos:
+    #             :language: json
+    #     """
+
+    # NOTE Being removed in V4
+    # @abstractmethod
+    # def why_entity_by_record_id(
+    #     self,
+    #     data_source_code: str,
+    #     record_id: str,
+    #     flags: int = G2EngineFlags.G2_WHY_ENTITY_DEFAULT_FLAGS,
+    #     **kwargs: Any,
+    # ) -> str:
+    #     """
+    #     The `why_entity_by_record_id` method determines *why* records resolved to an ENTITY_ID by a RECORD_ID.
+    #     Returns a JSON document that gives the results of the record analysis.
+
+    #     It has a “WHY_KEY”, which is similar to a match key, in defining the relevant connected data.
+    #     It shows candidate keys for features that initially cause the records to be analyzed for a relationship,
+    #     plus a series of feature scores that show how similar the feature data was.
+
+    #     The response JSON document also contains a separate ENTITIES section,
+    #     with the full information about the resolved entity.
+
+    #     The recommended composite flag is G2_WHY_ENTITY_DEFAULT_FLAGS.
+    #     Additional recommended flags are G2_ENTITY_OPTION_INCLUDE_INTERNAL_FEATURES and G2_ENTITY_OPTION_INCLUDE_FEATURE_STATS,
+    #     which provide detailed feature data that is useful for understanding the WHY_RESULTS data.
+
+    #     To control output, use `why_entity_by_record_id_v2` instead.
+
+    #     Args:
+    #         data_source_code (str): Identifies the provenance of the data.
+    #         record_id (str): The unique identifier within the records of the same data source.
+    #         flags (int, optional): Flags used to control information returned. Defaults to G2EngineFlags.G2_WHY_ENTITY_DEFAULT_FLAGS.
+
+    #     Returns:
+    #         str: A JSON document.
+
+    #     Raises:
+
+    #     .. collapse:: Example:
+
+    #         .. literalinclude:: ../../examples/g2engine/why_entity_by_record_id.py
+    #             :linenos:
+    #             :language: python
+
+    #         **Output:**
+
+    #         .. literalinclude:: ../../examples/g2engine/why_entity_by_record_id.txt
+    #             :linenos:
+    #             :language: json
+    #     """
+
+    # TODO: This should be going away in V4?
+    # @abstractmethod
+    # def why_records_v2(
+    #     self,
+    #     data_source_code_1: str,
+    #     record_id_1: str,
+    #     data_source_code_2: str,
+    #     record_id_2: str,
+    #     flags: int = G2EngineFlags.G2_WHY_ENTITY_DEFAULT_FLAGS,
+    #     **kwargs: Any,
+    # ) -> str:
+    #     """
+    #     The `why_records_v2` determines if any two records can or cannot resolve together, or if they relate.
+    #     It extends `why_records` by adding output control flags.
+
+    #     Args:
+    #         data_source_code_1 (str): Identifies the provenance of the data.
+    #         record_id_1 (str): The unique identifier within the records of the same data source.
+    #         data_source_code_2 (str): Identifies the provenance of the data.
+    #         record_id_2 (str): The unique identifier within the records of the same data source.
+    #         flags (int, optional): Flags used to control information returned. Defaults to G2EngineFlags.G2_WHY_ENTITY_DEFAULT_FLAGS.
+
+    #     Returns:
+    #         str: A JSON document.
+
+    #     Raises:
+
+    #     .. collapse:: Example:
+
+    #         .. literalinclude:: ../../examples/g2engine/why_entity_by_record_id.py
+    #             :linenos:
+    #             :language: python
+
+    #         **Output:**
+
+    #         .. literalinclude:: ../../examples/g2engine/why_entity_by_record_id.txt
+    #             :linenos:
+    #             :language: json
+    #     """
 
     @abstractmethod
     def why_records(

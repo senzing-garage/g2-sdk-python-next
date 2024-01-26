@@ -13,10 +13,18 @@ INI_PARAMS_DICT = {
 }
 MODULE_NAME = "Example"
 
-ENTITY_ID = 1
-
 try:
     g2_engine = g2engine.G2Engine(MODULE_NAME, INI_PARAMS_DICT)
-    g2_engine.reevaluate_entity(ENTITY_ID)
+    export_handle = g2_engine.export_json_entity_report()
+
+    with open("exportJSONEntityReport.json", "w", encoding="utf-8") as export_out:
+        while True:
+            export_record = g2_engine.fetch_next(export_handle)
+            if not export_record:
+                break
+            export_out.write(export_record)
+
+    g2_engine.close_export(export_handle)
+
 except G2Exception as err:
     print(err)
