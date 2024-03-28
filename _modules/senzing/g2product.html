@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>senzing.g2product &mdash; g2-sdk-python-next  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=19f00094" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
+        <script src="../../_static/doctools.js?v=888ff710"></script>
+        <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            g2-sdk-python-next
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <!-- Local TOC -->
+              <div class="local-toc"></div>
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">g2-sdk-python-next</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">senzing.g2product</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for senzing.g2product</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">The `g2product` package is used to inspect the Senzing product.</span>
+<span class="sd">It is a wrapper over Senzing&#39;s G2Product C binding.</span>
+<span class="sd">It conforms to the interface specified in</span>
+<span class="sd">`g2product_abstract.py &lt;https://github.com/Senzing/g2-sdk-python-next/blob/main/src/senzing/g2product_abstract.py&gt;`_</span>
+
+<span class="sd">To use g2product,</span>
+<span class="sd">the **LD_LIBRARY_PATH** environment variable must include a path to Senzing&#39;s libraries.</span>
+
+<span class="sd">Example:</span>
+
+<span class="sd">.. code-block:: bash</span>
+
+<span class="sd">    export LD_LIBRARY_PATH=/opt/senzing/g2/lib</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="c1"># pylint: disable=R0903</span>
+
+
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">from</span> <span class="nn">ctypes</span> <span class="kn">import</span> <span class="n">POINTER</span><span class="p">,</span> <span class="n">c_char</span><span class="p">,</span> <span class="n">c_char_p</span><span class="p">,</span> <span class="n">c_int</span><span class="p">,</span> <span class="n">c_longlong</span><span class="p">,</span> <span class="n">c_size_t</span><span class="p">,</span> <span class="n">cdll</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Union</span>
+
+<span class="kn">from</span> <span class="nn">.g2exception</span> <span class="kn">import</span> <span class="n">G2Exception</span><span class="p">,</span> <span class="n">new_g2exception</span>
+<span class="kn">from</span> <span class="nn">.g2helpers</span> <span class="kn">import</span> <span class="n">as_c_char_p</span><span class="p">,</span> <span class="n">as_c_int</span><span class="p">,</span> <span class="n">as_str</span><span class="p">,</span> <span class="n">find_file_in_path</span>
+<span class="kn">from</span> <span class="nn">.g2product_abstract</span> <span class="kn">import</span> <span class="n">G2ProductAbstract</span>
+
+<span class="c1"># Metadata</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;G2Product&quot;</span><span class="p">]</span>
+<span class="n">__version__</span> <span class="o">=</span> <span class="s2">&quot;0.0.1&quot;</span>  <span class="c1"># See https://www.python.org/dev/peps/pep-0396/</span>
+<span class="n">__date__</span> <span class="o">=</span> <span class="s2">&quot;2023-10-30&quot;</span>
+<span class="n">__updated__</span> <span class="o">=</span> <span class="s2">&quot;2023-11-07&quot;</span>
+
+<span class="n">SENZING_PRODUCT_ID</span> <span class="o">=</span> <span class="s2">&quot;5046&quot;</span>  <span class="c1"># See https://github.com/Senzing/knowledge-base/blob/main/lists/senzing-component-ids.md</span>
+<span class="n">CALLER_SKIP</span> <span class="o">=</span> <span class="mi">6</span>  <span class="c1"># Number of stack frames to skip when reporting location in Exception.</span>
+
+<span class="c1"># -----------------------------------------------------------------------------</span>
+<span class="c1"># G2Product class</span>
+<span class="c1"># -----------------------------------------------------------------------------</span>
+
+
+<div class="viewcode-block" id="G2Product">
+<a class="viewcode-back" href="../../senzing.html#senzing.g2product.G2Product">[docs]</a>
+<span class="k">class</span> <span class="nc">G2Product</span><span class="p">(</span><span class="n">G2ProductAbstract</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    The `init` method initializes the Senzing G2Product object.</span>
+<span class="sd">    It must be called prior to any other calls.</span>
+
+<span class="sd">    **Note:** If the G2Product constructor is called with parameters,</span>
+<span class="sd">    the constructor will automatically call the `init()` method.</span>
+
+<span class="sd">    Example:</span>
+
+<span class="sd">    .. code-block:: python</span>
+
+<span class="sd">        g2_product = g2product.G2Product(module_name, ini_params)</span>
+
+
+<span class="sd">    If the G2Product constructor is called without parameters,</span>
+<span class="sd">    the `init()` method must be called to initialize the use of G2Product.</span>
+
+<span class="sd">    Example:</span>
+
+<span class="sd">    .. code-block:: python</span>
+
+<span class="sd">        g2_product = g2product.G2Product()</span>
+<span class="sd">        g2_product.init(module_name, ini_params)</span>
+
+<span class="sd">    Either `module_name` and `ini_params` must both be specified or neither must be specified.</span>
+<span class="sd">    Just specifying one or the other results in a **G2Exception**.</span>
+
+<span class="sd">    Parameters:</span>
+<span class="sd">        module_name:</span>
+<span class="sd">            `Optional:` A name for the auditing node, to help identify it within system logs. Default: &quot;&quot;</span>
+<span class="sd">        ini_params:</span>
+<span class="sd">            `Optional:` A JSON string containing configuration parameters. Default: &quot;&quot;</span>
+<span class="sd">        init_config_id:</span>
+<span class="sd">            `Optional:` Specify the ID of a specific Senzing configuration. Default: 0 - Use default Senzing configuration</span>
+<span class="sd">        verbose_logging:</span>
+<span class="sd">            `Optional:` A flag to enable deeper logging of the G2 processing. 0 for no Senzing logging; 1 for logging. Default: 0</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">        TypeError: Incorrect datatype detected on input parameter.</span>
+<span class="sd">        g2exception.G2Exception: Failed to load the G2 library or incorrect `module_name`, `ini_params` combination.</span>
+
+<span class="sd">    .. collapse:: Example:</span>
+
+<span class="sd">        .. literalinclude:: ../../examples/g2product/g2product_constructor.py</span>
+<span class="sd">            :linenos:</span>
+<span class="sd">            :language: python</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># TODO: Consider making usual constructor private (`g2config.G2Config()`)</span>
+    <span class="c1"># and replacing it with static constructor (i.e. `g2config.NewABC(str,str)`, `g2config.NewDEF(str,dict))</span>
+
+    <span class="c1"># -------------------------------------------------------------------------</span>
+    <span class="c1"># Python dunder/magic methods</span>
+    <span class="c1"># -------------------------------------------------------------------------</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">module_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="p">,</span>
+        <span class="n">ini_params</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="p">,</span>
+        <span class="n">init_config_id</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
+        <span class="n">verbose_logging</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Constructor</span>
+
+<span class="sd">        For return value of -&gt; None, see https://peps.python.org/pep-0484/#the-meaning-of-annotations</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># pylint: disable=W0613</span>
+
+        <span class="c1"># Verify parameters.</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">auto_init</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ini_params</span> <span class="o">=</span> <span class="n">as_str</span><span class="p">(</span><span class="n">ini_params</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">init_config_id</span> <span class="o">=</span> <span class="n">init_config_id</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">module_name</span> <span class="o">=</span> <span class="n">module_name</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">verbose_logging</span> <span class="o">=</span> <span class="n">verbose_logging</span>
+
+        <span class="c1"># Load binary library.</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="s2">&quot;nt&quot;</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">library_handle</span> <span class="o">=</span> <span class="n">cdll</span><span class="o">.</span><span class="n">LoadLibrary</span><span class="p">(</span><span class="n">find_file_in_path</span><span class="p">(</span><span class="s2">&quot;G2.dll&quot;</span><span class="p">))</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">library_handle</span> <span class="o">=</span> <span class="n">cdll</span><span class="o">.</span><span class="n">LoadLibrary</span><span class="p">(</span><span class="s2">&quot;libG2.so&quot;</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">OSError</span> <span class="k">as</span> <span class="n">err</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">G2Exception</span><span class="p">(</span><span class="s2">&quot;Failed to load the G2 library&quot;</span><span class="p">)</span> <span class="kn">from</span> <span class="nn">err</span>
+
+        <span class="c1"># Initialize C function input parameters and results</span>
+        <span class="c1"># Must be synchronized with g2/sdk/c/libg2product.h</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">library_handle</span><span class="o">.</span><span class="n">G2GoHelper_free</span><span class="o">.</span><span class="n">argtypes</span> <span class="o">=</span> <span class="p">[</span><span class="n">c_char_p</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">library_handle</span><span class="o">.</span><span class="n">G2Product_clearLastException</span><span class="o">.</span><span class="n">argtypes</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">library_handle</span><span class="o">.</span><span class="n">G2Product_clearLastException</span><span class="o">.</span><span class="n">restype</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">library_handle</span><span class="o">.</span><span class="n">G2Product_destroy</span><span class="o">.</span><span class="n">argtypes</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">library_handle</span><span class="o">.</span><span class="n">G2Product_destroy</span><span class="o">.</span><span class="n">restype</span> <span class="o">=</span> <span class="n">c_longlong</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">library_handle</span><span class="o">.</span><span class="n">G2Product_getLastException</span><span class="o">.</span><span class="n">argtypes</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="n">POINTER</span><span class="p">(</span><span class="n">c_char</span><span class="p">),</span>
+            <span class="n">c_size_t</span><span class="p">,</span>
+        <span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">library_handle</span><span class="o">.</span><span class="n">G2Product_getLastException</span><span class="o">.</span><span class="n">restype</span> <span class="o">=</span> <span class="n">c_longlong</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">library_handle</span><span class="o">.</span><span class="n">G2Product_getLastExceptionCode</span><span class="o">.</span><span class="n">argtypes</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">library_handle</span><span class="o">.</span><span class="n">G2Product_getLastExceptionCode</span><span class="o">.</span><span class="n">restype</span> <span class="o">=</span> <span class="n">c_longlong</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">library_handle</span><span class="o">.</span><span class="n">G2Product_init</span><span class="o">.</span><span class="n">argtypes</span> <span class="o">=</span> <span class="p">[</span><span class="n">c_char_p</span><span class="p">,</span> <span class="n">c_char_p</span><span class="p">,</span> <span class="n">c_int</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">library_handle</span><span class="o">.</span><span class="n">G2Product_init</span><span class="o">.</span><span class="n">restype</span> <span class="o">=</span> <span class="n">c_longlong</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">library_handle</span><span class="o">.</span><span class="n">G2Product_license</span><span class="o">.</span><span class="n">argtypes</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">library_handle</span><span class="o">.</span><span class="n">G2Product_license</span><span class="o">.</span><span class="n">restype</span> <span class="o">=</span> <span class="n">c_char_p</span>
+        <span class="c1"># self.library_handle.G2Product_validateLicenseFile.argtypes = [c_char_p, POINTER(c_char_p), POINTER(c_size_t), self._resize_func_def]</span>
+        <span class="c1"># self.library_handle.G2Product_validateLicenseFile.restype = c_longlong</span>
+        <span class="c1"># self.library_handle.G2Product_validateLicenseStringBase64.argtypes = [c_char_p, POINTER(c_char_p), POINTER(c_size_t), self._resize_func_def]</span>
+        <span class="c1"># self.library_handle.G2Product_validateLicenseStringBase64.restype = c_longlong</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">library_handle</span><span class="o">.</span><span class="n">G2Product_version</span><span class="o">.</span><span class="n">argtypes</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">library_handle</span><span class="o">.</span><span class="n">G2Product_version</span><span class="o">.</span><span class="n">restype</span> <span class="o">=</span> <span class="n">c_char_p</span>
+
+        <span class="c1"># Optionally, initialize Senzing engine.</span>
+
+        <span class="k">if</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">module_name</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span> <span class="ow">or</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ini_params</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">):</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">module_name</span><span class="p">)</span> <span class="o">+</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ini_params</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="bp">self</span><span class="o">.</span><span class="n">new_exception</span><span class="p">(</span><span class="mi">4003</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">module_name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">ini_params</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">module_name</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">auto_init</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">init</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">module_name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">ini_params</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose_logging</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__del__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Destructor&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">auto_init</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">destroy</span><span class="p">()</span>
+
+    <span class="c1"># -------------------------------------------------------------------------</span>
+    <span class="c1"># Exception helpers</span>
+    <span class="c1"># -------------------------------------------------------------------------</span>
+
+    <span class="k">def</span> <span class="nf">new_exception</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">error_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="ne">Exception</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Generate a new exception based on the error_id.</span>
+
+<span class="sd">        :meta private:</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">new_g2exception</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">library_handle</span><span class="o">.</span><span class="n">G2Product_getLastException</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">library_handle</span><span class="o">.</span><span class="n">G2Product_clearLastException</span><span class="p">,</span>
+            <span class="n">SENZING_PRODUCT_ID</span><span class="p">,</span>
+            <span class="n">error_id</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">ID_MESSAGES</span><span class="p">,</span>
+            <span class="n">CALLER_SKIP</span><span class="p">,</span>
+            <span class="o">*</span><span class="n">args</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="c1"># -------------------------------------------------------------------------</span>
+    <span class="c1"># G2Product methods</span>
+    <span class="c1"># -------------------------------------------------------------------------</span>
+
+<div class="viewcode-block" id="G2Product.destroy">
+<a class="viewcode-back" href="../../senzing.html#senzing.g2product.G2Product.destroy">[docs]</a>
+    <span class="k">def</span> <span class="nf">destroy</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">library_handle</span><span class="o">.</span><span class="n">G2Product_destroy</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">result</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="bp">self</span><span class="o">.</span><span class="n">new_exception</span><span class="p">(</span><span class="mi">4001</span><span class="p">,</span> <span class="n">result</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="G2Product.init">
+<a class="viewcode-back" href="../../senzing.html#senzing.g2product.G2Product.init">[docs]</a>
+    <span class="k">def</span> <span class="nf">init</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">module_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">ini_params</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="n">Any</span><span class="p">]],</span>
+        <span class="n">verbose_logging</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">library_handle</span><span class="o">.</span><span class="n">G2Product_init</span><span class="p">(</span>
+            <span class="n">as_c_char_p</span><span class="p">(</span><span class="n">module_name</span><span class="p">),</span>
+            <span class="n">as_c_char_p</span><span class="p">(</span><span class="n">as_str</span><span class="p">(</span><span class="n">ini_params</span><span class="p">)),</span>
+            <span class="n">as_c_int</span><span class="p">(</span><span class="n">verbose_logging</span><span class="p">),</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="n">result</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="bp">self</span><span class="o">.</span><span class="n">new_exception</span><span class="p">(</span>
+                <span class="mi">4002</span><span class="p">,</span> <span class="n">module_name</span><span class="p">,</span> <span class="n">ini_params</span><span class="p">,</span> <span class="n">verbose_logging</span><span class="p">,</span> <span class="n">result</span>
+            <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="G2Product.license">
+<a class="viewcode-back" href="../../senzing.html#senzing.g2product.G2Product.license">[docs]</a>
+    <span class="k">def</span> <span class="nf">license</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">library_handle</span><span class="o">.</span><span class="n">G2Product_license</span><span class="p">()</span><span class="o">.</span><span class="n">decode</span><span class="p">())</span></div>
+
+
+<div class="viewcode-block" id="G2Product.version">
+<a class="viewcode-back" href="../../senzing.html#senzing.g2product.G2Product.version">[docs]</a>
+    <span class="k">def</span> <span class="nf">version</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">library_handle</span><span class="o">.</span><span class="n">G2Product_version</span><span class="p">()</span><span class="o">.</span><span class="n">decode</span><span class="p">())</span></div>
+</div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Senzing.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

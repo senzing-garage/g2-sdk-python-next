@@ -1,0 +1,846 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>senzing.g2exception &mdash; g2-sdk-python-next  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=19f00094" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
+        <script src="../../_static/doctools.js?v=888ff710"></script>
+        <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            g2-sdk-python-next
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <!-- Local TOC -->
+              <div class="local-toc"></div>
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">g2-sdk-python-next</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">senzing.g2exception</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for senzing.g2exception</h1><div class="highlight"><pre>
+<span></span><span class="ch">#! /usr/bin/env python3</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">TODO: g2exception.py</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="c1"># AC - Temp disables to get changes in for move to senzing garage</span>
+<span class="c1"># pylint: disable=C0302</span>
+
+<span class="kn">import</span> <span class="nn">datetime</span>
+<span class="kn">import</span> <span class="nn">json</span>
+<span class="kn">import</span> <span class="nn">threading</span>
+<span class="kn">import</span> <span class="nn">traceback</span>
+<span class="kn">from</span> <span class="nn">ctypes</span> <span class="kn">import</span> <span class="n">c_char</span><span class="p">,</span> <span class="n">create_string_buffer</span><span class="p">,</span> <span class="n">sizeof</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Dict</span>
+
+<span class="c1"># Metadata</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="s2">&quot;G2BadInputError&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;G2ConfigurationError&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;G2DatabaseConnectionLostError&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;G2DatabaseError&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;G2Exception&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;G2LicenseError&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;G2NotFoundError&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;G2NotInitializedError&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;G2RetryableError&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;G2RetryTimeoutExceededError&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;G2UnhandledError&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;G2UnknownDatasourceError&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;G2UnrecoverableError&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;new_g2exception&quot;</span><span class="p">,</span>
+<span class="p">]</span>
+<span class="n">__version__</span> <span class="o">=</span> <span class="s2">&quot;0.0.1&quot;</span>  <span class="c1"># See https://www.python.org/dev/peps/pep-0396/</span>
+<span class="n">__date__</span> <span class="o">=</span> <span class="s2">&quot;2023-10-30&quot;</span>
+<span class="n">__updated__</span> <span class="o">=</span> <span class="s2">&quot;2023-10-30&quot;</span>
+
+
+<span class="c1"># -----------------------------------------------------------------------------</span>
+<span class="c1"># Base G2Exception</span>
+<span class="c1"># -----------------------------------------------------------------------------</span>
+
+
+<div class="viewcode-block" id="G2Exception">
+<a class="viewcode-back" href="../../senzing.html#senzing.g2exception.G2Exception">[docs]</a>
+<span class="k">class</span> <span class="nc">G2Exception</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Base exception for G2 related python code.&quot;&quot;&quot;</span></div>
+
+
+
+<span class="c1"># -----------------------------------------------------------------------------</span>
+<span class="c1"># Category exceptions</span>
+<span class="c1"># - These exceptions represent categories of actions that can be taken by</span>
+<span class="c1">#   the calling program.</span>
+<span class="c1"># -----------------------------------------------------------------------------</span>
+
+
+<div class="viewcode-block" id="G2BadInputError">
+<a class="viewcode-back" href="../../senzing.html#senzing.g2exception.G2BadInputError">[docs]</a>
+<span class="k">class</span> <span class="nc">G2BadInputError</span><span class="p">(</span><span class="n">G2Exception</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;The user-supplied input contained an error.&quot;&quot;&quot;</span></div>
+
+
+
+<div class="viewcode-block" id="G2ConfigurationError">
+<a class="viewcode-back" href="../../senzing.html#senzing.g2exception.G2ConfigurationError">[docs]</a>
+<span class="k">class</span> <span class="nc">G2ConfigurationError</span><span class="p">(</span><span class="n">G2Exception</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;The program can provide a remedy and continue.&quot;&quot;&quot;</span></div>
+
+
+
+<div class="viewcode-block" id="G2RetryableError">
+<a class="viewcode-back" href="../../senzing.html#senzing.g2exception.G2RetryableError">[docs]</a>
+<span class="k">class</span> <span class="nc">G2RetryableError</span><span class="p">(</span><span class="n">G2Exception</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;The program can provide a remedy and continue.&quot;&quot;&quot;</span></div>
+
+
+
+<div class="viewcode-block" id="G2UnrecoverableError">
+<a class="viewcode-back" href="../../senzing.html#senzing.g2exception.G2UnrecoverableError">[docs]</a>
+<span class="k">class</span> <span class="nc">G2UnrecoverableError</span><span class="p">(</span><span class="n">G2Exception</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;System failure, can&#39;t continue.&quot;&quot;&quot;</span></div>
+
+
+
+<span class="c1"># -----------------------------------------------------------------------------</span>
+<span class="c1"># Detail exceptions for G2BadInputException</span>
+<span class="c1"># - Processing did not complete.</span>
+<span class="c1"># - These exceptions are &quot;per record&quot; exceptions.</span>
+<span class="c1"># - The record should be recorded as &quot;bad&quot;.  (logged, queued as failure)</span>
+<span class="c1"># - Processing may continue.</span>
+<span class="c1"># -----------------------------------------------------------------------------</span>
+
+
+<div class="viewcode-block" id="G2NotFoundError">
+<a class="viewcode-back" href="../../senzing.html#senzing.g2exception.G2NotFoundError">[docs]</a>
+<span class="k">class</span> <span class="nc">G2NotFoundError</span><span class="p">(</span><span class="n">G2BadInputError</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Not found&quot;&quot;&quot;</span></div>
+
+
+
+<div class="viewcode-block" id="G2UnknownDatasourceError">
+<a class="viewcode-back" href="../../senzing.html#senzing.g2exception.G2UnknownDatasourceError">[docs]</a>
+<span class="k">class</span> <span class="nc">G2UnknownDatasourceError</span><span class="p">(</span><span class="n">G2BadInputError</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Unknown Datasource&quot;&quot;&quot;</span></div>
+
+
+
+<span class="c1"># -----------------------------------------------------------------------------</span>
+<span class="c1"># Detail exceptions for G2RetryableException</span>
+<span class="c1"># - Processing did not complete.</span>
+<span class="c1"># - These exceptions may be remedied programmatically.</span>
+<span class="c1"># - The call to the Senzing method should be retried.</span>
+<span class="c1"># - Processing may continue.</span>
+<span class="c1"># -----------------------------------------------------------------------------</span>
+
+
+<div class="viewcode-block" id="G2DatabaseConnectionLostError">
+<a class="viewcode-back" href="../../senzing.html#senzing.g2exception.G2DatabaseConnectionLostError">[docs]</a>
+<span class="k">class</span> <span class="nc">G2DatabaseConnectionLostError</span><span class="p">(</span><span class="n">G2RetryableError</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Database connection lost&quot;&quot;&quot;</span></div>
+
+
+
+<div class="viewcode-block" id="G2RetryTimeoutExceededError">
+<a class="viewcode-back" href="../../senzing.html#senzing.g2exception.G2RetryTimeoutExceededError">[docs]</a>
+<span class="k">class</span> <span class="nc">G2RetryTimeoutExceededError</span><span class="p">(</span><span class="n">G2RetryableError</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Retry timeout exceeded time limit&quot;&quot;&quot;</span></div>
+
+
+
+<span class="c1"># -----------------------------------------------------------------------------</span>
+<span class="c1"># Detail exceptions for G2UnrecoverableException</span>
+<span class="c1"># - Processing did not complete.</span>
+<span class="c1"># - These exceptions cannot be remedied programmatically.</span>
+<span class="c1"># - Processing cannot continue.</span>
+<span class="c1"># -----------------------------------------------------------------------------</span>
+
+
+<div class="viewcode-block" id="G2DatabaseError">
+<a class="viewcode-back" href="../../senzing.html#senzing.g2exception.G2DatabaseError">[docs]</a>
+<span class="k">class</span> <span class="nc">G2DatabaseError</span><span class="p">(</span><span class="n">G2UnrecoverableError</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Database exception&quot;&quot;&quot;</span></div>
+
+
+
+<div class="viewcode-block" id="G2LicenseError">
+<a class="viewcode-back" href="../../senzing.html#senzing.g2exception.G2LicenseError">[docs]</a>
+<span class="k">class</span> <span class="nc">G2LicenseError</span><span class="p">(</span><span class="n">G2UnrecoverableError</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot; &quot;Licence exception&quot;&quot;&quot;</span></div>
+
+
+
+<div class="viewcode-block" id="G2NotInitializedError">
+<a class="viewcode-back" href="../../senzing.html#senzing.g2exception.G2NotInitializedError">[docs]</a>
+<span class="k">class</span> <span class="nc">G2NotInitializedError</span><span class="p">(</span><span class="n">G2UnrecoverableError</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Not initialized&quot;&quot;&quot;</span></div>
+
+
+
+<div class="viewcode-block" id="G2UnhandledError">
+<a class="viewcode-back" href="../../senzing.html#senzing.g2exception.G2UnhandledError">[docs]</a>
+<span class="k">class</span> <span class="nc">G2UnhandledError</span><span class="p">(</span><span class="n">G2UnrecoverableError</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Could not handle exception&quot;&quot;&quot;</span></div>
+
+
+
+<span class="c1"># -----------------------------------------------------------------------------</span>
+<span class="c1"># Determine Exception based on Senzing reason code.</span>
+<span class="c1"># Reference: https://senzing.zendesk.com/hc/en-us/articles/360026678133-Engine-Error-codes</span>
+<span class="c1"># -----------------------------------------------------------------------------</span>
+
+<span class="c1"># fmt: off</span>
+<span class="n">EXCEPTION_MAP</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="mi">2</span><span class="p">:</span>     <span class="n">G2BadInputError</span><span class="p">,</span>                <span class="c1"># EAS_ERR_INVALID_XML                                                                    &quot;Invalid XML&quot;</span>
+    <span class="mi">5</span><span class="p">:</span>     <span class="n">G2Exception</span><span class="p">,</span>                    <span class="c1"># EAS_ERR_EXCEEDED_MAX_RETRIES                                                           &quot;Exceeded the Maximum Number of Retries Allowed&quot;</span>
+    <span class="mi">7</span><span class="p">:</span>     <span class="n">G2BadInputError</span><span class="p">,</span>                <span class="c1"># EAS_ERR_EMPTY_XML_MESSAGE                                                              &quot;Empty XML Message&quot;</span>
+    <span class="mi">10</span><span class="p">:</span>    <span class="n">G2RetryTimeoutExceededError</span><span class="p">,</span>    <span class="c1"># EAS_ERR_RETRY_TIMEOUT                                                                  &quot;Retry timeout exceeded&quot;</span>
+    <span class="mi">14</span><span class="p">:</span>    <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_INVALID_DATASTORE_CONFIGURATION_TYPE                                           &quot;Invalid Datastore Configuration Type&quot;</span>
+    <span class="mi">19</span><span class="p">:</span>    <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_NO_CONFIGURATION_FOUND                                                         &quot;Configuration not found&quot;</span>
+    <span class="mi">20</span><span class="p">:</span>    <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_CONFIG_CANNOT_BE_NULL_DATABASE                                                 &quot;Configuration cannot be loaded from database connection&quot;</span>
+    <span class="mi">21</span><span class="p">:</span>    <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_CONFIG_CANNOT_BE_NULL_CONFIG_FILE                                              &quot;Configuration cannot be loaded from config file&quot;</span>
+    <span class="mi">22</span><span class="p">:</span>    <span class="n">G2BadInputError</span><span class="p">,</span>                <span class="c1"># EAS_ERR_INVALID_DOCTYPE                                                                &quot;Invalid DocType {0}&quot;</span>
+    <span class="mi">23</span><span class="p">:</span>    <span class="n">G2BadInputError</span><span class="p">,</span>                <span class="c1"># EAS_ERR_CONFLICTING_DATA_SOURCE_VALUES                                                 &quot;Conflicting DATA_SOURCE values &#39;{0}&#39; and &#39;{1}&#39;&quot;</span>
+    <span class="mi">24</span><span class="p">:</span>    <span class="n">G2BadInputError</span><span class="p">,</span>                <span class="c1"># EAS_ERR_CONFLICTING_RECORD_ID_VALUES                                                   &quot;Conflicting RECORD_ID values &#39;{0}&#39; and &#39;{1}&#39;&quot;</span>
+    <span class="mi">25</span><span class="p">:</span>    <span class="n">G2BadInputError</span><span class="p">,</span>                <span class="c1"># EAS_ERR_CONFLICTING_LOAD_ID_VALUES                                                     &quot;Conflicting LOAD_ID values &#39;{0}&#39; and &#39;{1}&#39;&quot;</span>
+    <span class="mi">26</span><span class="p">:</span>    <span class="n">G2BadInputError</span><span class="p">,</span>                <span class="c1"># EAS_ERR_RESERVED_WORD_USED_IN_DOCUMENT                                                 &quot;Inbound data contains a reserved keyword &#39;{0}&#39;&quot;</span>
+    <span class="mi">27</span><span class="p">:</span>    <span class="n">G2UnknownDatasourceError</span><span class="p">,</span>       <span class="c1"># EAS_ERR_UNKNOWN_DSRC_CODE_VALUE                                                        &quot;Unknown DATA_SOURCE value &#39;{0}&#39;&quot;</span>
+    <span class="mi">28</span><span class="p">:</span>    <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_INVALID_JSON_CONFIG_DOCUMENT                                                   &quot;Invalid JSON config document&quot;</span>
+    <span class="mi">29</span><span class="p">:</span>    <span class="n">G2Exception</span><span class="p">,</span>                    <span class="c1"># EAS_ERR_INVALID_HANDLE                                                                 &quot;Invalid Handle&quot;</span>
+    <span class="mi">30</span><span class="p">:</span>    <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_INVALID_MATCH_LEVEL                                                            &quot;Invalid match level &#39;{0}&#39;&quot;</span>
+    <span class="mi">33</span><span class="p">:</span>    <span class="n">G2NotFoundError</span><span class="p">,</span>                <span class="c1"># EAS_ERR_UNKNOWN_DSRC_RECORD_ID                                                         &quot;Unknown record: dsrc[{0}], record[{1}]&quot;</span>
+    <span class="mi">34</span><span class="p">:</span>    <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_AMBIGUOUS_ENTITY_FTYPE_MISSING                                                 &quot;AMBIGUOUS_ENTITY Feature Type is not configured&quot;</span>
+    <span class="mi">35</span><span class="p">:</span>    <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_AMBIGUOUS_TIER_FELEM_MISSING                                                   &quot;AMBIGUOUS_TIER Feature Element is not configured&quot;</span>
+    <span class="mi">36</span><span class="p">:</span>    <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_AMBIGUOUS_FTYPE_ID_FELEM_MISSING                                               &quot;AMBIGUOUS_FTYPE_ID Feature Element is not configured&quot;</span>
+    <span class="mi">37</span><span class="p">:</span>    <span class="n">G2NotFoundError</span><span class="p">,</span>                <span class="c1"># EAS_ERR_UNKNOWN_RESOLVED_ENTITY_VALUE                                                  &quot;Unknown resolved entity value &#39;{0}&#39;&quot;</span>
+    <span class="mi">38</span><span class="p">:</span>    <span class="n">G2Exception</span><span class="p">,</span>                    <span class="c1"># EAS_ERR_RECORD_HAS_NO_RESOLVED_ENTITY                                                  &quot;Data source record has no resolved entity: dsrc[{0}], recordID[{1}]&quot;</span>
+    <span class="mi">39</span><span class="p">:</span>    <span class="n">G2Exception</span><span class="p">,</span>                    <span class="c1"># EAS_ERR_NO_OBSERVED_ENTITY_FOR_DSRC_ENTITY_KEY                                         &quot;No observed entity for entity key: dsrc[{0}], record_id[{1}], key[{2}]&quot;</span>
+    <span class="mi">40</span><span class="p">:</span>    <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_CONFIG_COMPATIBILITY_MISMATCH                                                  &quot;The engine configuration compatibility version [{0}] does not match the version of the provided config[{1}].&quot;</span>
+    <span class="mi">41</span><span class="p">:</span>    <span class="n">G2Exception</span><span class="p">,</span>                    <span class="c1"># EAS_ERR_DOCUMENT_PREPROCESSING_FAILED                                                  &quot;Document preprocessing failed&quot;</span>
+    <span class="mi">42</span><span class="p">:</span>    <span class="n">G2Exception</span><span class="p">,</span>                    <span class="c1"># EAS_ERR_DOCUMENT_LOAD_PROCESSING_FAILED                                                &quot;Document load processing failed&quot;</span>
+    <span class="mi">43</span><span class="p">:</span>    <span class="n">G2Exception</span><span class="p">,</span>                    <span class="c1"># EAS_ERR_DOCUMENT_ER_PROCESSING_FAILED                                                  &quot;Document ER processing failed&quot;</span>
+    <span class="mi">44</span><span class="p">:</span>    <span class="n">G2Exception</span><span class="p">,</span>                    <span class="c1"># EAS_ERR_CHECK_ENTITY_PROCESSING_FAILED                                                 &quot;Check entity processing failed&quot;</span>
+    <span class="mi">45</span><span class="p">:</span>    <span class="n">G2Exception</span><span class="p">,</span>                    <span class="c1"># EAS_ERR_UMF_PROC_PROCESSING_FAILED                                                     &quot;UMF procedure processing failed&quot;</span>
+    <span class="mi">46</span><span class="p">:</span>    <span class="n">G2Exception</span><span class="p">,</span>                    <span class="c1"># EAS_ERR_DOCUMENT_HASHING_PROCESSING_FAILED                                             &quot;Document hashing-processing failed&quot;</span>
+    <span class="mi">47</span><span class="p">:</span>    <span class="n">G2Exception</span><span class="p">,</span>                    <span class="c1"># EAS_ERR_SESSION_IS_INVALID                                                             &quot;Session is invalid&quot;</span>
+    <span class="mi">48</span><span class="p">:</span>    <span class="n">G2NotInitializedError</span><span class="p">,</span>          <span class="c1"># EAS_ERR_G2_NOT_INITIALIZED                                                             &quot;G2 is not initialized&quot;</span>
+    <span class="mi">49</span><span class="p">:</span>    <span class="n">G2NotInitializedError</span><span class="p">,</span>          <span class="c1"># EAS_ERR_G2AUDIT_NOT_INITIALIZED                                                        &quot;G2Audit is not initialized&quot;</span>
+    <span class="mi">50</span><span class="p">:</span>    <span class="n">G2NotInitializedError</span><span class="p">,</span>          <span class="c1"># EAS_ERR_G2HASHER_NOT_INITIALIZED                                                       &quot;G2Hasher is not initialized&quot;</span>
+    <span class="mi">51</span><span class="p">:</span>    <span class="n">G2BadInputError</span><span class="p">,</span>                <span class="c1"># EAS_ERR_BOTH_RECORD_ID_AND_ENT_SRC_KEY_SPECIFIED                                       &quot;Cannot use both Record ID and Entity Source Key in record&quot;</span>
+    <span class="mi">52</span><span class="p">:</span>    <span class="n">G2Exception</span><span class="p">,</span>                    <span class="c1"># EAS_ERR_UNKNOWN_RELATIONSHIP_ID_VALUE                                                  &quot;Unknown relationship ID value &#39;{0}&#39;&quot;</span>
+    <span class="mi">53</span><span class="p">:</span>    <span class="n">G2BadInputError</span><span class="p">,</span>                <span class="c1"># EAS_ERR_G2DIAGNOSTIC_NOT_INITIALIZED                                                   &quot;G2Diagnostic is not initialized&quot;</span>
+    <span class="mi">54</span><span class="p">:</span>    <span class="n">G2DatabaseError</span><span class="p">,</span>                <span class="c1"># EAS_ERR_G2_DATA_REPOSITORY_WAS_PURGED                                                  &quot;Data repository was purged&quot;</span>
+    <span class="mi">55</span><span class="p">:</span>    <span class="n">G2Exception</span><span class="p">,</span>                    <span class="c1"># EAS_ERR_NO_RESOLVED_ENTITY_FOR_DSRC_ENTITY_KEY                                         &quot;No resolved entity for entity key: dsrc[{0}], record_id[{1}], key[{2}]&quot;</span>
+    <span class="mi">56</span><span class="p">:</span>    <span class="n">G2Exception</span><span class="p">,</span>                    <span class="c1"># EAS_ERR_NO_RECORDS_EXIST_FOR_RESOLVED_ENTITY                                           &quot;No data source records exist for entity ID: entityID[{0}]&quot;</span>
+    <span class="mi">57</span><span class="p">:</span>    <span class="n">G2Exception</span><span class="p">,</span>                    <span class="c1"># EAS_ERR_UNKNOWN_FEATURE_ID_VALUE                                                       &quot;Unknown feature ID value &#39;{0}&#39;&quot;</span>
+    <span class="mi">58</span><span class="p">:</span>    <span class="n">G2Exception</span><span class="p">,</span>                    <span class="c1"># EAS_ERR_G2_INITIALIZATION_FAILURE                                                      &quot;G2 initialization process has failed&quot;</span>
+    <span class="mi">60</span><span class="p">:</span>    <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_CONFIG_DATABASE_MISMATCH                                                       &quot;The engine configuration does not match the records loaded into the repository:  errors[{0}].&quot;</span>
+    <span class="mi">61</span><span class="p">:</span>    <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_AMBIGUOUS_SUPPRESSED_LIBFEAT_FELEM_MISSING                                     &quot;AMBIGUOUS_SUPRESSED_LIBFEAT Feature Element is not configured&quot;</span>
+    <span class="mi">62</span><span class="p">:</span>    <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_AMBIGUOUS_TYPE_FELEM_MISSING                                                   &quot;AMBIGUOUS_TYPE Feature Element is not configured&quot;</span>
+    <span class="mi">63</span><span class="p">:</span>    <span class="n">G2NotInitializedError</span><span class="p">,</span>          <span class="c1"># EAS_ERR_G2CONFIGMGR_NOT_INITIALIZED                                                    &quot;G2ConfigMgr is not initialized&quot;</span>
+    <span class="mi">64</span><span class="p">:</span>    <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_CONFUSED_ENTITY_FTYPE_MISSING                                                  &quot;CONFUSED_ENTITY Feature Type is not configured&quot;</span>
+    <span class="mi">65</span><span class="p">:</span>    <span class="n">G2BadInputError</span><span class="p">,</span>                <span class="c1"># EAS_ERR_UNKNOWN_ENTITY_TYPE_ID                                                         &quot;Unknown entity type ID &#39;{0}&#39;&quot;</span>
+    <span class="mi">66</span><span class="p">:</span>    <span class="n">G2BadInputError</span><span class="p">,</span>                <span class="c1"># EAS_ERR_UNKNOWN_GENERIC_PLAN_VALUE                                                     &quot;Unknown generic plan value &#39;{0}&#39;&quot;</span>
+    <span class="mi">67</span><span class="p">:</span>    <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_INVALID_GENERIC_PLAN_VALUE                                                     &quot;Invalid Generic Plan ID [{0}] configured for the &#39;{1}&#39; retention level.&#39;&quot;</span>
+    <span class="mi">68</span><span class="p">:</span>    <span class="n">G2Exception</span><span class="p">,</span>                    <span class="c1"># EAS_ERR_UNKNOWN_ER_RESULT                                                              &quot;Unknown ER-result.&quot;</span>
+    <span class="mi">69</span><span class="p">:</span>    <span class="n">G2Exception</span><span class="p">,</span>                    <span class="c1"># EAS_ERR_NO_CANDIDATES                                                                  &quot;No candidates.&quot;</span>
+    <span class="mi">76</span><span class="p">:</span>    <span class="n">G2Exception</span><span class="p">,</span>                    <span class="c1"># EAS_ERR_INBOUND_FEATURE_VERSION_NEWER_THAN_CONFIG                                      &quot;Inbound Feature Version [{0}] is newer than configured version [{1}] for feature type[{2}].&quot;</span>
+    <span class="mi">77</span><span class="p">:</span>    <span class="n">G2Exception</span><span class="p">,</span>                    <span class="c1"># EAS_ERR_ERROR_WHEN_PRIMING_GNR                                                         &quot;Error when priming GNR resources &#39;{0}&#39;&quot;</span>
+    <span class="mi">78</span><span class="p">:</span>    <span class="n">G2Exception</span><span class="p">,</span>                    <span class="c1"># EAS_ERR_ERROR_WHEN_ENCRYPTING                                                          &quot;Error when encrypting &#39;{0}&#39;&quot;</span>
+    <span class="mi">79</span><span class="p">:</span>    <span class="n">G2Exception</span><span class="p">,</span>                    <span class="c1"># EAS_ERR_ERROR_WHEN_DECRYPTING                                                          &quot;Error when decryting &#39;{0}&#39;&quot;</span>
+    <span class="mi">80</span><span class="p">:</span>    <span class="n">G2Exception</span><span class="p">,</span>                    <span class="c1"># EAS_ERR_ERROR_WHEN_VALIDATING_ENCRYPTION_SIGNATURE_COMPATIBILITY                       &quot;Error when validating encryption signature compatibility &#39;{0}&#39;&quot;</span>
+    <span class="mi">81</span><span class="p">:</span>    <span class="n">G2Exception</span><span class="p">,</span>                    <span class="c1"># EAS_ERR_ERROR_WHEN_CHECKING_DISTINCT_FEATURE_GENERALIZATION                            &quot;Error when checking distinct feature generalization &#39;{0}&#39;&quot;</span>
+    <span class="mi">82</span><span class="p">:</span>    <span class="n">G2Exception</span><span class="p">,</span>                    <span class="c1"># EAS_ERR_ERROR_WHEN_RUNNING_DQM                                                         &quot;Error when running DQM &#39;{0}&#39;&quot;</span>
+    <span class="mi">83</span><span class="p">:</span>    <span class="n">G2Exception</span><span class="p">,</span>                    <span class="c1"># EAS_ERR_ERROR_WHEN_CREATING_EFEATS                                                     &quot;Error when creating EFEATS &#39;{0}&#39;&quot;</span>
+    <span class="mi">84</span><span class="p">:</span>    <span class="n">G2Exception</span><span class="p">,</span>                    <span class="c1"># EAS_ERR_ERROR_WHEN_SIMPLE_SCORING                                                      &quot;Error when simple scoring &#39;{0}&#39;&quot;</span>
+    <span class="mi">85</span><span class="p">:</span>    <span class="n">G2Exception</span><span class="p">,</span>                    <span class="c1"># EAS_ERR_ERROR_WHEN_SCORING_PAIR                                                        &quot;Error when scoring a pair &#39;{0}&#39;&quot;</span>
+    <span class="mi">86</span><span class="p">:</span>    <span class="n">G2Exception</span><span class="p">,</span>                    <span class="c1"># EAS_ERR_ERROR_WHEN_SCORING_SET                                                         &quot;Error when scoring a set &#39;{0}&#39;&quot;</span>
+    <span class="mi">87</span><span class="p">:</span>    <span class="n">G2UnhandledError</span><span class="p">,</span>               <span class="c1"># EAS_ERR_SRD_EXCEPTION                                                                  &quot;SRD Exception &#39;{0}&#39;&quot;</span>
+    <span class="mi">88</span><span class="p">:</span>    <span class="n">G2BadInputError</span><span class="p">,</span>                <span class="c1"># EAS_ERR_UNKNOWN_SEARCH_PROFILE_VALUE                                                   &quot;Unknown search profile value &#39;{0}&#39;&quot;</span>
+    <span class="mi">89</span><span class="p">:</span>    <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_MISCONFIGURED_SEARCH_PROFILE_VALUE                                             &quot;Misconfigured search profile value &#39;{0}&#39;&quot;</span>
+    <span class="mi">90</span><span class="p">:</span>    <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_CANNOT_ADD_LIBRARY_FEATURES_TO_DATASTORE                                       &quot;Cannot add library features to datastore&quot;</span>
+    <span class="mi">999</span><span class="p">:</span>   <span class="n">G2LicenseError</span><span class="p">,</span>                 <span class="c1"># EAS_ERR_LICENSE_HAS_EXPIRED                                                            &quot;License has expired&quot;</span>
+    <span class="mi">1000</span><span class="p">:</span>  <span class="n">G2DatabaseError</span><span class="p">,</span>                <span class="c1"># EAS_ERR_UNHANDLED_DATABASE_ERROR                                                       &quot;Unhandled Database Error &#39;{0}&#39;&quot;</span>
+    <span class="mi">1001</span><span class="p">:</span>  <span class="n">G2DatabaseError</span><span class="p">,</span>                <span class="c1"># EAS_ERR_CRITICAL_DATABASE_ERROR                                                        &quot;Critical Database Error &#39;{0}&#39;&quot;</span>
+    <span class="mi">1002</span><span class="p">:</span>  <span class="n">G2DatabaseError</span><span class="p">,</span>                <span class="c1"># EAS_ERR_DATABASE_MEMORY_ERROR                                                          &quot;Database Memory Error &#39;{0}&#39;&quot;</span>
+    <span class="mi">1003</span><span class="p">:</span>  <span class="n">G2DatabaseError</span><span class="p">,</span>                <span class="c1"># EAS_ERR_TABLE_SPACE_OR_LOG_VIOLATION                                                   &quot;Table Space or Log Violation &#39;{0}&#39;&quot;</span>
+    <span class="mi">1004</span><span class="p">:</span>  <span class="n">G2DatabaseError</span><span class="p">,</span>                <span class="c1"># EAS_ERR_RESOURCE_CONTENTION                                                            &quot;Resource Contention &#39;{0}&#39;&quot;</span>
+    <span class="mi">1005</span><span class="p">:</span>  <span class="n">G2DatabaseError</span><span class="p">,</span>                <span class="c1"># EAS_ERR_USER_DEFINED_PROC_ERROR                                                        &quot;User Defined Procedure or Function Error &#39;{0}&#39;&quot;</span>
+    <span class="mi">1006</span><span class="p">:</span>  <span class="n">G2DatabaseConnectionLostError</span><span class="p">,</span>  <span class="c1"># EAS_ERR_DATABASE_CONNECTION_FAILURE                                                    &quot;Database Connection Failure &#39;{0}&#39;&quot;</span>
+    <span class="mi">1007</span><span class="p">:</span>  <span class="n">G2DatabaseConnectionLostError</span><span class="p">,</span>  <span class="c1"># EAS_ERR_DATABASE_CONNECTION_LOST                                                       &quot;Database Connection Lost &#39;{0}&#39;&quot;</span>
+    <span class="mi">1008</span><span class="p">:</span>  <span class="n">G2DatabaseError</span><span class="p">,</span>                <span class="c1"># EAS_ERR_DEADLOCK_ERROR                                                                 &quot;Deadlock Error &#39;{0}&#39;&quot;</span>
+    <span class="mi">1009</span><span class="p">:</span>  <span class="n">G2DatabaseError</span><span class="p">,</span>                <span class="c1"># EAS_ERR_INSUFFICIENT_PERMISSIONS                                                       &quot;Insufficient Permissions &#39;{0}&#39;&quot;</span>
+    <span class="mi">1010</span><span class="p">:</span>  <span class="n">G2DatabaseError</span><span class="p">,</span>                <span class="c1"># EAS_ERR_TRANSACTION_ERROR                                                              &quot;Transaction Error &#39;{0}&#39;&quot;</span>
+    <span class="mi">1011</span><span class="p">:</span>  <span class="n">G2DatabaseError</span><span class="p">,</span>                <span class="c1"># EAS_ERR_UNIQUE_CONSTRAINT_VIOLATION                                                    &quot;Unique Constraint Violation &#39;{0}&#39;&quot;</span>
+    <span class="mi">1012</span><span class="p">:</span>  <span class="n">G2DatabaseError</span><span class="p">,</span>                <span class="c1"># EAS_ERR_CONSTRAINT_VIOLATION                                                           &quot;Constraint Violation &#39;{0}&#39;&quot;</span>
+    <span class="mi">1013</span><span class="p">:</span>  <span class="n">G2DatabaseError</span><span class="p">,</span>                <span class="c1"># EAS_ERR_SYNTAX_ERROR                                                                   &quot;Syntax Error &#39;{0}&#39;&quot;</span>
+    <span class="mi">1014</span><span class="p">:</span>  <span class="n">G2DatabaseError</span><span class="p">,</span>                <span class="c1"># EAS_ERR_CURSOR_ERROR                                                                   &quot;Cursor Error &#39;{0}&#39;&quot;</span>
+    <span class="mi">1015</span><span class="p">:</span>  <span class="n">G2DatabaseError</span><span class="p">,</span>                <span class="c1"># EAS_ERR_DATATYPE_ERROR                                                                 &quot;Data Type Error &#39;{0}&#39;&quot;</span>
+    <span class="mi">1016</span><span class="p">:</span>  <span class="n">G2DatabaseError</span><span class="p">,</span>                <span class="c1"># EAS_ERR_TRANSACTION_ABORTED_ERROR                                                      &quot;Transaction Aborted &#39;{0}&#39;&quot;</span>
+    <span class="mi">1017</span><span class="p">:</span>  <span class="n">G2DatabaseError</span><span class="p">,</span>                <span class="c1"># EAS_ERR_DATABASE_OPERATOR_NOT_SET                                                      &quot;Database operator not set &#39;{0}&#39;&quot;</span>
+    <span class="mi">1018</span><span class="p">:</span>  <span class="n">G2DatabaseError</span><span class="p">,</span>                <span class="c1"># EAS_ERR_DATABASE_EXCEPTION_GENERATOR_NOT_SET                                           &quot;Database exception generator not set &#39;{0}&#39;&quot;</span>
+    <span class="mi">1019</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_DATABASE_SCHEMA_TABLES_NOT_FOUND                                               &quot;Datastore schema tables not found. [{0}]&quot;</span>
+    <span class="mi">2001</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_FEATURE_HAS_NO_FTYPE_CODE                                                      &quot;Cannot process feature with no FTYPE_CODE[{0}]&quot;</span>
+    <span class="mi">2002</span><span class="p">:</span>  <span class="n">G2Exception</span><span class="p">,</span>                    <span class="c1"># EAS_ERR_REQUESTED_CONFIG_FOR_INVALID_FTYPE_CODE                                        &quot;Requested config for invalid FTYPE_CODE[{0}]&quot;</span>
+    <span class="mi">2003</span><span class="p">:</span>  <span class="n">G2Exception</span><span class="p">,</span>                    <span class="c1"># EAS_ERR_NO_FELEM_CODE                                                                  &quot;Cannot process OBS_FELEM with no FELEM_CODE[{0}]&quot;</span>
+    <span class="mi">2005</span><span class="p">:</span>  <span class="n">G2Exception</span><span class="p">,</span>                    <span class="c1"># EAS_ERR_INVALID_FELEM_CODE                                                             &quot;FELEM_CODE[{0}] is not configured for FTYPE_CODE[{1}]&quot;</span>
+    <span class="mi">2006</span><span class="p">:</span>  <span class="n">G2Exception</span><span class="p">,</span>                    <span class="c1"># EAS_ERR_MISSING_ENT_SRC_KEY                                                            &quot;OBS_ENT is missing ENT_SRC_KEY&quot;</span>
+    <span class="mi">2007</span><span class="p">:</span>  <span class="n">G2Exception</span><span class="p">,</span>                    <span class="c1"># EAS_ERR_MISSING_OBS_SRC_KEY                                                            &quot;OBS is missing OBS_SRC_KEY&quot;</span>
+    <span class="mi">2012</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_ERRULE_CONFIGURED_FOR_RESOLVE_AND_RELATE                                       &quot;ER Rule [{0}] is configured for both resolve and relate.&quot;</span>
+    <span class="mi">2015</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_INVALID_FTYPE_CODE                                                             &quot;Invalid FTYPE_CODE[{0}]&quot;</span>
+    <span class="mi">2027</span><span class="p">:</span>  <span class="n">G2Exception</span><span class="p">,</span>                    <span class="c1"># EAS_ERR_PLUGIN_INIT                                                                    &quot;Plugin initialization error {0}&quot;</span>
+    <span class="mi">2029</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_REQUESTED_CONFIG_FOR_INVALID_PLUGIN                                            &quot;Configuration not found for plugin type: {0}&quot;</span>
+    <span class="mi">2034</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_INVALID_CFRTN_VAL                                                              &quot;CFRTN_ID[{0}]/FTYPE[{1}] is expecting CFRTN_VAL[{2}] which is not offered by CFUNC_ID[{3}][{4}]. Available scores are [{5}]&quot;</span>
+    <span class="mi">2036</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_FTYPE_HAS_NO_BOM                                                               &quot;FType configured with no Feature Elements (Bill of Materials)  FTYPE_ID[{0}] FTYPE_CODE[{1}]&quot;</span>
+    <span class="mi">2037</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_FUNC_CALL_HAS_NO_BOM                                                           &quot;Function call ({3}) configured with no Bill of Materials  {4}[{0}] FTYPE_ID[{1}] FTYPE_CODE[{2}]&quot;</span>
+    <span class="mi">2038</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_DISTINCT_FEATURE_HAS_NO_BOM                                                    &quot;Distinct feature call configured with no Bill of Materials  DFCALL_ID[{0}]&quot;</span>
+    <span class="mi">2041</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_EFCALL_HAS_NO_BOM                                                              &quot;EFeature creation call configured with no Bill of Materials  EFCALL_ID[{0}]&quot;</span>
+    <span class="mi">2045</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_CFRTN_REFERS_BAD_CFUNC_ID                                                      &quot;CFG_CFRTN references CFUNC_ID[{0}] which is not configured&quot;</span>
+    <span class="mi">2047</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_MISSING_DSRC_CODE                                                              &quot;OBS_SRC_KEY[{0}] is missing DSRC_CODE tag which is required&quot;</span>
+    <span class="mi">2048</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_FEAT_FREQ_INVALID                                                              &quot;FEATURE CODE[{0}] FEATURE FREQUENCY[{1}] is an invalid frequency&quot;</span>
+    <span class="mi">2049</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_FUNC_INVALID                                                                   &quot;{2} [{0}] is invalid for {3}[{1}]&quot;</span>
+    <span class="mi">2050</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_QUAL_FRAG_NOT_FOUND                                                            &quot;Rule[{0}] Qualifier Fragment[{1}]: Fragment not found&quot;</span>
+    <span class="mi">2051</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_DISQUAL_FRAG_NOT_FOUND                                                         &quot;Rule[{0}] Disqualifier Fragment[{1}]: Fragment not found&quot;</span>
+    <span class="mi">2057</span><span class="p">:</span>  <span class="n">G2BadInputError</span><span class="p">,</span>                <span class="c1"># EAS_ERR_BAD_DSRC_ACTION                                                                &quot;OBS_SRC_KEY[{0}] has DSRC_ACTION[{1}] which is invalid.  Valid values are [A]dd, [C]hange, [D]elete, [P]rune or E[X]tensive Evaluation&quot;</span>
+    <span class="mi">2061</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_DUPLICATE_LOOKUP_IDENTIFIER                                                    &quot;Duplicate [{0}] with identifier value [{1}].  Only unique values are allowed.&quot;</span>
+    <span class="mi">2062</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_INVALID_LOOKUP_IDENTIFIER                                                      &quot;Requested lookup of [{0}] using unknown value [{1}].  Value not found.&quot;</span>
+    <span class="mi">2065</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_FTYPE_HAS_MULTIPLE_DEFINITIONS                                                 &quot;FType configured with multiple definitions. FTYPE_CODE[{0}] used in FTYPE_ID[{1}] and FTYPE_ID[{2}]&quot;</span>
+    <span class="mi">2066</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_FELEM_HAS_MULTIPLE_DEFINITIONS                                                 &quot;FElem configured with multiple definitions. FELEM_CODE[{0}] used in FELEM_ID[{1}] and FELEM_ID[{2}]&quot;</span>
+    <span class="mi">2067</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_ERFRAG_HAS_MULTIPLE_DEFINITIONS                                                &quot;ER Fragment code configured with multiple definitions. ERFRAG_CODE[{0}] used in ERFRAG_ID[{1}] and ERFRAG_ID[{2}]&quot;</span>
+    <span class="mi">2069</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_BOM_CONFIG_INVALID_FOR_SIMPLE_PLUGIN                                           &quot;Configured plugin for CFCALL_ID[{0}] requires exactly one value in BOM&quot;</span>
+    <span class="mi">2070</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_EFCALL_HAS_INVALID_FUNCTION                                                    &quot;EFeature creation call configured with invalid function ID EFCALL_ID[{0}] EFUNC_ID[{1}]&quot;</span>
+    <span class="mi">2071</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_EFBOM_HAS_INVALID_EFCALL                                                       &quot;EFeature BOM configured with invalid EFCALL_ID[{0}]&quot;</span>
+    <span class="mi">2073</span><span class="p">:</span>  <span class="n">G2Exception</span><span class="p">,</span>                    <span class="c1"># EAS_ERR_LOADING_LIBRARY                                                                &quot;Library loading error {0}&quot;</span>
+    <span class="mi">2074</span><span class="p">:</span>  <span class="n">G2Exception</span><span class="p">,</span>                    <span class="c1"># EAS_ERR_SCORING_MANAGER_PLUGIN                                                         &quot;Scoring manager: id {0} and {1} do not match&quot;</span>
+    <span class="mi">2075</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_TABLE_CONFIGURED_WITH_INVALID_FTYPE_CODE                                       &quot;Table {0} configured with an invalid type FTYPE_CODE[{1}]&quot;</span>
+    <span class="mi">2076</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_TABLE_CONFIGURED_WITH_INVALID_FELEM_CODE                                       &quot;Table {0} configured with an invalid type FELEM_CODE[{1}]&quot;</span>
+    <span class="mi">2077</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_TABLE_CONFIGURED_WITH_INVALID_ETYPE_ID                                         &quot;Table {0} configured with an invalid type ETYPE_ID[{1}]&quot;</span>
+    <span class="mi">2079</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_EFBOM_CONFIGURED_WITH_INVALID_FTYPE_ID                                         &quot;CFG_EFBOM configured with an invalid type FTYPE_ID[{0}]&quot;</span>
+    <span class="mi">2080</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_EFBOM_CONFIGURED_WITH_INVALID_FELEM_ID                                         &quot;CFG_EFBOM configured with an invalid type FELEM_ID[{0}]&quot;</span>
+    <span class="mi">2081</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_FUNC_CALL_CONFIGURED_WITH_INVALID_FTYPE_ID                                     &quot;{1} configured with an invalid type FTYPE_ID[{0}]&quot;</span>
+    <span class="mi">2082</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_FUNC_CALL_CONFIGURED_WITH_INVALID_FUNC_ID                                      &quot;{1} configured with an invalid type {2}[{0}]&quot;</span>
+    <span class="mi">2083</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_FUNC_BOM_CONFIGURED_WITH_INVALID_FTYPE_ID                                      &quot;{1} configured with an invalid type FTYPE_ID[{0}]&quot;</span>
+    <span class="mi">2084</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_FUNC_BOM_CONFIGURED_WITH_INVALID_FELEM_ID                                      &quot;{1} configured with an invalid type FELEM_ID[{0}]&quot;</span>
+    <span class="mi">2087</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_TABLE_CONFIGURED_WITH_DUPLICATE_CONFIG_FOR_EFU_TYPE                            &quot;Table [{0}] configured with duplicate config values for ETYPE_ID[{1}]/FTYPE_ID[{2}]/UTYPE_CODE[{3}]&quot;</span>
+    <span class="mi">2088</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_TABLE_CONFIGURED_WITH_INVALID_RCLASS_ID                                        &quot;Table {0} configured with an invalid RCLASS_ID[{1}]&quot;</span>
+    <span class="mi">2089</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_UNKNOWN_FCLASS_ID                                                              &quot;UNKNOWN FCLASS ID[{0}]&quot;</span>
+    <span class="mi">2090</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_SFCALL_HAS_INVALID_FUNCTION                                                    &quot;Feature standardization call configured with invalid function ID SFCALL_ID[{0}] SFUNC_ID[{1}]&quot;</span>
+    <span class="mi">2091</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_TABLE_CONFIGURED_WITH_BOTH_FTYPE_ID_AND_FELEM_ID                               &quot;{0} configured with both an FTYPE_ID[{1}] and FELEM_ID[{2}]&quot;</span>
+    <span class="mi">2092</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_TABLE_CONFIGURED_WITH_NEITHER_FTYPE_ID_NOR_FELEM_ID                            &quot;{0} configured with neither an FTYPE_ID nor an FELEM_ID&quot;</span>
+    <span class="mi">2093</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_TABLE_CONFIGURED_WITH_DUPLICATE_EXEC_ORDER_FOR_IDENTIFIER_LIST                 &quot;Table [{0}] configured with duplicate execution order value [{3}] for identifiers[{1}] with values [{2}]&quot;</span>
+    <span class="mi">2094</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_DUPLICATE_VALUE_FOR_FIELD_IN_TABLE                                             &quot;Duplicate value [{2}] of field [{1}] in config [{0}]&quot;</span>
+    <span class="mi">2095</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_TABLE_CONFIGURED_WITH_INVALID_FTYPE_CODE_FELEM_CODE_PAIR                       &quot;Table {0} configured with an invalid FTYPE_CODE[{1}]/FELEM_CODE[{2}] pair&quot;</span>
+    <span class="mi">2099</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_COUNTER_CONFIG_INVALID_THRESHOLD                                               &quot;Next Threshold for a counter should be no less than 10, but has NEXT_THRESH{0}&quot;</span>
+    <span class="mi">2101</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_XPATH_OP_UNSUPPORTED                                                           &quot;XPath operation unsupported [{0}]&quot;</span>
+    <span class="mi">2102</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_XPATH_AXIS_UNSUPPORTED                                                         &quot;XPath axis unsupported [{0}]&quot;</span>
+    <span class="mi">2103</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_XPATH_TEST_UNSUPPORTED                                                         &quot;XPath test unsupported [{0}]&quot;</span>
+    <span class="mi">2104</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_XPATH_TYPE_UNSUPPORTED                                                         &quot;XPath type unsupported [{0}]&quot;</span>
+    <span class="mi">2105</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_XPATH_NODE_PREFIX_UNSUPPORTED                                                  &quot;XPath node prefix unsupported [{0}]&quot;</span>
+    <span class="mi">2106</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_XPATH_NODE_NAME_UNSUPPORTED                                                    &quot;XPath node name unsupported position[{0}], name[{1}]&quot;</span>
+    <span class="mi">2107</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_XPATH_BEHAVIOR_TYPE_UNSUPPORTED                                                &quot;XPath behavior type unsupported [{0}]&quot;</span>
+    <span class="mi">2108</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_XPATH_BUCKET_UNSUPPORTED                                                       &quot;XPath bucket type unsupported [{0}]&quot;</span>
+    <span class="mi">2109</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_XPATH_VALUE_TYPE_UNSUPPORTED                                                   &quot;XPath value type unsupported [{0}]&quot;</span>
+    <span class="mi">2110</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_XPATH_PLUS_TYPE_UNSUPPORTED                                                    &quot;XPath plus operand type unsupported [{0}]&quot;</span>
+    <span class="mi">2111</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_XPATH_FRAGMENT_NOT_EVALUATED                                                   &quot;XPath fragment not evaluated[{0}]&quot;</span>
+    <span class="mi">2112</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_XPATH_FRAGMENT_NOT_CONFIGURED                                                  &quot;XPath fragment not configured[{0}]&quot;</span>
+    <span class="mi">2113</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_XPATH_FUNCTION_UNSUPPORTED                                                     &quot;XPath function unsupported [{0}]&quot;</span>
+    <span class="mi">2114</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_INVALID_FTYPE_SCORESET                                                         &quot;Cannot set score for invalid FTYPE_ID [{0}]&quot;</span>
+    <span class="mi">2116</span><span class="p">:</span>  <span class="n">G2Exception</span><span class="p">,</span>                    <span class="c1"># EAS_ERR_UNITIALIZED_AMBIGUOUS_CACHE                                                    &quot;Uninitialized Ambiguous Test Cache&quot;</span>
+    <span class="mi">2117</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_SCORING_CALL_HAS_NO_BOM                                                        &quot;Scoring call configured with no Bill of Materials  CFCALL_ID[{0}].&quot;</span>
+    <span class="mi">2118</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_BOM_CONFIG_INVALID_FOR_SCORING_PLUGIN                                          &quot;Configured plugin for CFCALL_ID[{0}] has invalid BOM.&quot;</span>
+    <span class="mi">2120</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_TABLE_CONFIGURED_WITH_INVALID_FTYPE_ID                                         &quot;Table {0} configured with an invalid type FTYPE_ID[{1}]&quot;</span>
+    <span class="mi">2121</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_TABLE_CONFIGURED_WITH_INVALID_FELEM_ID                                         &quot;Table {0} configured with an invalid type FELEM_ID[{1}]&quot;</span>
+    <span class="mi">2123</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_CFUNC_CONFIGURED_WITH_NO_CFRTN                                                 &quot;CFG_CFUNC [{0}] feature type [{1}] configured without any corresponding return values in CFG_CFRTN&quot;</span>
+    <span class="mi">2131</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_OBS_ENT_NOT_FOUND                                                              &quot;Requested resolution of OBS_ENT_ID that is not loaded OBS_ENT_ID[{0}]&quot;</span>
+    <span class="mi">2135</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_UMF_MAPPING_CONFIG_ERROR                                                       &quot;Error in UMF Mapping Config[{0}]&quot;</span>
+    <span class="mi">2136</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_UMF_MAPPING_MISSING_REQUIRED_FIELD                                             &quot;Error in UMF Mapping, missing required field[{0}]&quot;</span>
+    <span class="mi">2137</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_UMF_MAPPING_MALFORMED_INPUT                                                    &quot;Error in UMF Mapping, input message is malformed[{0}]&quot;</span>
+    <span class="mi">2138</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_INVALID_CFRTN_INDEX                                                            &quot;CFRTN_ID[{0}] is out of range. Valid range is 0-7&quot;</span>
+    <span class="mi">2139</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_DSRC_INTEREST_CONFIGURED_WITH_INVALID_DSRCID                                   &quot;Data Source Interest configured with invalid Data Source ID DSRC_ID[{0}]&quot;</span>
+    <span class="mi">2205</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_ENTITY_TYPE_CODE_ALREADY_EXISTS                                                &quot;Entity type code [{0}] already exists.&quot;</span>
+    <span class="mi">2206</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_ENTITY_TYPE_ID_ALREADY_EXISTS                                                  &quot;Entity type ID [{0}] already exists.&quot;</span>
+    <span class="mi">2207</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_DATA_SOURCE_CODE_DOES_NOT_EXIST                                                &quot;Data source code [{0}] does not exist.&quot;</span>
+    <span class="mi">2208</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_DATA_SOURCE_CODE_ALREADY_EXISTS                                                &quot;Data source code [{0}] already exists.&quot;</span>
+    <span class="mi">2209</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_DATA_SOURCE_ID_ALREADY_EXISTS                                                  &quot;Data source ID [{0}] already exists.&quot;</span>
+    <span class="mi">2210</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_FELEM_CODE_DOES_NOT_EXIST                                                      &quot;Feature element code [{0}] does not exist.&quot;</span>
+    <span class="mi">2211</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_FELEM_CODE_ALREADY_EXISTS                                                      &quot;Feature element code [{0}] already exists.&quot;</span>
+    <span class="mi">2212</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_FELEM_ID_ALREADY_EXISTS                                                        &quot;Feature element ID [{0}] already exists.&quot;</span>
+    <span class="mi">2213</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_INVALID_FELEM_DATA_TYPE                                                        &quot;Invalid feature element datatype [{0}] found.  Datatype must be in [{1}].&quot;</span>
+    <span class="mi">2214</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_FELEM_IS_CONFIGURED_FOR_USE_IN_FEATURES                                        &quot;Feature element [{0}] is configured for use in feature(s) [{1}].&quot;</span>
+    <span class="mi">2215</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_FTYPE_CODE_DOES_NOT_EXIST                                                      &quot;Feature type code [{0}] does not exist.&quot;</span>
+    <span class="mi">2216</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_FTYPE_CODE_ALREADY_EXISTS                                                      &quot;Feature type code [{0}] already exists.&quot;</span>
+    <span class="mi">2217</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_FTYPE_ID_ALREADY_EXISTS                                                        &quot;Feature type ID [{0}] already exists.&quot;</span>
+    <span class="mi">2218</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_FEATURE_FREQUENCY_IS_INVALID                                                   &quot;Feature type frequency [{0}] is invalid.&quot;</span>
+    <span class="mi">2219</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_FEATURE_ELEMENT_LIST_IS_EMPTY                                                  &quot;Feature element list is empty.&quot;</span>
+    <span class="mi">2220</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_STANDARDIZATION_FUNCTION_DOES_NOT_EXIST                                        &quot;Standardization function [{0}] does not exist.&quot;</span>
+    <span class="mi">2221</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_FUNCTION_USES_BOTH_FTYPE_AND_FELEM_TRIGGER                                     &quot;Function call requested uses both triggering feature type [{0}] and triggering feature element code [{1}].  Cannot use both triggering feature type and triggering feature element cod</span>
+    <span class="mi">2222</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_EXPRESSION_FUNCTION_DOES_NOT_EXIST                                             &quot;Expression function [{0}] does not exist.&quot;</span>
+    <span class="mi">2223</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_EXPRESSION_FUNCTION_FEATURE_ELEMENT_LIST_IS_EMPTY                              &quot;Expression function feature element list is empty.&quot;</span>
+    <span class="mi">2224</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_COMPARISON_FUNCTION_DOES_NOT_EXIST                                             &quot;Comparison function [{0}] does not exist.&quot;</span>
+    <span class="mi">2225</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_COMPARISON_FUNCTION_FEATURE_ELEMENT_LIST_IS_EMPTY                              &quot;Comparison function feature element list is empty.&quot;</span>
+    <span class="mi">2226</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_DISTINCT_FUNCTION_DOES_NOT_EXIST                                               &quot;Distinct feature function [{0}] does not exist.&quot;</span>
+    <span class="mi">2227</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_DISTINCT_FUNCTION_FEATURE_ELEMENT_LIST_IS_EMPTY                                &quot;Distinct feature function feature element list is empty.&quot;</span>
+    <span class="mi">2228</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_FELEM_CODE_MUST_BE_UNIQUE_IN_FELEM_LIST                                        &quot;Feature element code [{0}] must be unique in felem list.&quot;</span>
+    <span class="mi">2230</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_FTYPE_CODE_AND_FELEM_CODE_MUST_BE_UNIQUE_IN_EXPRESSED_FUNCTION_CALL            &quot;Feature type [{0}] and feature element [{1}] must be unique in expressed feature function call.&quot;</span>
+    <span class="mi">2231</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_FTYPE_CODE_AND_FELEM_CODE_IN_EXPRESSED_FUNCTION_CALL_DO_NOT_EXIST_IN_FEATURE   &quot;Feature type [{0}] and feature element [{1}] requested for expressed feature function call, but don&#39;t exist in feature [{0}].&quot;</span>
+    <span class="mi">2232</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_FELEM_CODE_MUST_BE_UNIQUE_IN_COMPARISON_FUNCTION_CALL                          &quot;Feature element [{0}] must be unique in comparison feature function call.&quot;</span>
+    <span class="mi">2233</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_FELEM_CODE_IN_COMPARISON_FUNCTION_CALL_DOES_NOT_EXIST_IN_FEATURE               &quot;Feature element [{0}] requested for comparison feature function call, but doesn&#39;t exist in feature [{1}].&quot;</span>
+    <span class="mi">2234</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_FELEM_CODE_MUST_BE_UNIQUE_IN_DISTINCT_FUNCTION_CALL                            &quot;Feature element [{0}] must be unique in distinct feature function call.&quot;</span>
+    <span class="mi">2235</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_FELEM_CODE_IN_DISTINCT_FUNCTION_CALL_DOES_NOT_EXIST_IN_FEATURE                 &quot;Feature element [{0}] requested for distinct feature function call, but doesn&#39;t exist in feature [{1}].&quot;</span>
+    <span class="mi">2236</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_EXEC_ORDER_IS_NOT_SPECIFIED_FOR_FUNCTION                                       &quot;Exec order not specified for function.&quot;</span>
+    <span class="mi">2237</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_SFCALL_ID_ALREADY_EXISTS                                                       &quot;Standardization function call ID [{0}] already exists.&quot;</span>
+    <span class="mi">2238</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_EFCALL_ID_ALREADY_EXISTS                                                       &quot;Expression function call ID [{0}] already exists.&quot;</span>
+    <span class="mi">2239</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_CFCALL_ID_ALREADY_EXISTS                                                       &quot;Comparison function call ID [{0}] already exists.&quot;</span>
+    <span class="mi">2240</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_DFCALL_ID_ALREADY_EXISTS                                                       &quot;Distinct feature function call ID [{0}] already exists.&quot;</span>
+    <span class="mi">2241</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_FTYPE_CODE_REQUIRED_BY_SEPARATE_EXPRESSED_FUNCTION_CALL                        &quot;Feature type [{0}] required for separate expressed feature function call [{1}].&quot;</span>
+    <span class="mi">2242</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_SFCALL_ID_DOES_NOT_EXIST                                                       &quot;Standardization function call ID [{0}] does not exist.&quot;</span>
+    <span class="mi">2243</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_EFCALL_ID_DOES_NOT_EXIST                                                       &quot;Expression function call ID [{0}] does not exist.&quot;</span>
+    <span class="mi">2244</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_CFCALL_ID_DOES_NOT_EXIST                                                       &quot;Comparison function call ID [{0}] does not exist.&quot;</span>
+    <span class="mi">2245</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_DFCALL_ID_DOES_NOT_EXIST                                                       &quot;Distinct feature function call ID [{0}] does not exist.&quot;</span>
+    <span class="mi">2246</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_BOM_EXEC_ORDER_ALREADY_EXISTS                                                  &quot;BOM exec order value [{0}] already exists.&quot;</span>
+    <span class="mi">2247</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_COMPARISON_FUNCTION_CALL_DOES_NOT_EXIST_FOR_FEATURE                            &quot;Comparison function call does not exist for feature [{0}].&quot;</span>
+    <span class="mi">2248</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_DISTINCT_FUNCTION_CALL_DOES_NOT_EXIST_FOR_FEATURE                              &quot;Distinct feature function call does not exist for feature [{0}].&quot;</span>
+    <span class="mi">2249</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_CONFLICTING_SPECIFIERS_FOR_FUNCTION_CALL                                       &quot;Conflicting specifiers: Function call ID [{0}] does not match function call ID [{1}] from feature type.&quot;</span>
+    <span class="mi">2250</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_ATTR_CODE_DOES_NOT_EXIST                                                       &quot;Attribute code [{0}] does not exist.&quot;</span>
+    <span class="mi">2251</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_ATTR_CODE_ALREADY_EXISTS                                                       &quot;Attribute code [{0}] already exists.&quot;</span>
+    <span class="mi">2252</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_ATTR_ID_ALREADY_EXISTS                                                         &quot;Attribute ID [{0}] already exists.&quot;</span>
+    <span class="mi">2253</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_ATTR_CLASS_CODE_DOES_NOT_EXIST                                                 &quot;Attribute class code [{0}] does not exist.&quot;</span>
+    <span class="mi">2254</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_FUNCTION_USES_NEITHER_FTYPE_NOR_FELEM_TRIGGER                                  &quot;Function call requested uses neither triggering feature type [{0}] nor triggering feature element code [{1}].  At least one trigger must be specified.&quot;</span>
+    <span class="mi">2255</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_FEATURE_CLASS_CODE_DOES_NOT_EXIST                                              &quot;Feature class code [{0}] does not exist.&quot;</span>
+    <span class="mi">2256</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_RELATIONSHIP_TYPE_CODE_DOES_NOT_EXIST                                          &quot;Relationship type code [{0}] does not exist.&quot;</span>
+    <span class="mi">2257</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_FELEM_CODE_NOT_IN_FEATURE                                                      &quot;Feature element code [{0}] not included in feature[{1}].&quot;</span>
+    <span class="mi">2258</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_ER_FRAGMENT_DOES_NOT_EXIST                                                     &quot;ER fragment code [{0}] does not exist.&quot;</span>
+    <span class="mi">2259</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_ER_RULE_DOES_NOT_EXIST                                                         &quot;ER rule code [{0}] does not exist.&quot;</span>
+    <span class="mi">2260</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_ERFRAG_ID_ALREADY_EXISTS                                                       &quot;ER fragment ID [{0}] already exists.&quot;</span>
+    <span class="mi">2261</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_ERRULE_ID_ALREADY_EXISTS                                                       &quot;ER rule ID [{0}] already exists.&quot;</span>
+    <span class="mi">2262</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_ERFRAG_CODE_ALREADY_EXISTS                                                     &quot;ER fragment code [{0}] already exists.&quot;</span>
+    <span class="mi">2263</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_ERRULE_CODE_ALREADY_EXISTS                                                     &quot;ER rule code [{0}] already exists.&quot;</span>
+    <span class="mi">2264</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_ERFRAG_CODE_DOES_NOT_EXIST                                                     &quot;ER fragment code [{0}] does not exist.&quot;</span>
+    <span class="mi">2266</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_ERFRAG_CODE_MUST_BE_UNIQUE_IN_DEPENDENCY_LIST                                  &quot;ER fragment code [{0}] must be unique in dependency list.&quot;</span>
+    <span class="mi">2267</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_SECTION_NAME_ALREADY_EXISTS                                                    &quot;Section name [{0}] already exists.&quot;</span>
+    <span class="mi">2268</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_SECTION_NAME_DOES_NOT_EXIST                                                    &quot;Section name [{0}] does not exist.&quot;</span>
+    <span class="mi">2269</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_SECTION_FIELD_NAME_ALREADY_EXISTS                                              &quot;Section field name [{0}] already exists.&quot;</span>
+    <span class="mi">2270</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_SFUNC_ID_ALREADY_EXISTS                                                        &quot;Feature standardization function ID [{0}] already exists.&quot;</span>
+    <span class="mi">2271</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_SFUNC_CODE_ALREADY_EXISTS                                                      &quot;Feature standardization function code [{0}] already exists.&quot;</span>
+    <span class="mi">2272</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_EFUNC_ID_ALREADY_EXISTS                                                        &quot;Feature expression function ID [{0}] already exists.&quot;</span>
+    <span class="mi">2273</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_EFUNC_CODE_ALREADY_EXISTS                                                      &quot;Feature expression function code [{0}] already exists.&quot;</span>
+    <span class="mi">2274</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_CFUNC_ID_ALREADY_EXISTS                                                        &quot;Feature comparison function ID [{0}] already exists.&quot;</span>
+    <span class="mi">2275</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_CFUNC_CODE_ALREADY_EXISTS                                                      &quot;Feature comparison function code [{0}] already exists.&quot;</span>
+    <span class="mi">2276</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_DFUNC_ID_ALREADY_EXISTS                                                        &quot;Feature distinct function ID [{0}] already exists.&quot;</span>
+    <span class="mi">2277</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_DFUNC_CODE_ALREADY_EXISTS                                                      &quot;Feature distinct function code [{0}] already exists.&quot;</span>
+    <span class="mi">2278</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_COMPATIBILITY_VERSION_NOT_FOUND_IN_CONFIG                                      &quot;Compatibility version not found in document.&quot;</span>
+    <span class="mi">2279</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_CFRTN_ID_ALREADY_EXISTS                                                        &quot;Feature comparison function return ID [{0}] already exists.&quot;</span>
+    <span class="mi">2280</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_CFUNC_CODE_DOES_NOT_EXIST                                                      &quot;Feature comparison function code [{0}] does not exist.&quot;</span>
+    <span class="mi">2281</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_CFRTN_VALUE_ALREADY_EXISTS                                                     &quot;Feature comparison function return value [{0}] already exists for comparison function [{1}] ftype [{2}].&quot;</span>
+    <span class="mi">2282</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_CFUNC_EXEC_ORDER_ALREADY_EXISTS                                                &quot;Feature comparison function exec order value [{0}] already exists for comparison function [{1}] ftype [{2}].&quot;</span>
+    <span class="mi">2283</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_EFUNC_CODE_DOES_NOT_EXIST                                                      &quot;Feature expression function code [{0}] does not exist.&quot;</span>
+    <span class="mi">2285</span><span class="p">:</span>  <span class="n">G2Exception</span><span class="p">,</span>                    <span class="c1"># EAS_ERR_INVALID_FORMAT_FOR_ENTITIES                                                    &quot;Invalid format for ENTITIES.&quot;</span>
+    <span class="mi">2286</span><span class="p">:</span>  <span class="n">G2Exception</span><span class="p">,</span>                    <span class="c1"># EAS_ERR_NO_ENTITY_ID_FOUND_FOR_ENTITY                                                  &quot;No entity ID found for entity.&quot;</span>
+    <span class="mi">2287</span><span class="p">:</span>  <span class="n">G2Exception</span><span class="p">,</span>                    <span class="c1"># EAS_ERR_NO_DATA_SOURCE_FOUND                                                           &quot;No data source found.&quot;</span>
+    <span class="mi">2288</span><span class="p">:</span>  <span class="n">G2Exception</span><span class="p">,</span>                    <span class="c1"># EAS_ERR_NO_RECORD_ID_FOUND                                                             &quot;No record ID found.&quot;</span>
+    <span class="mi">2289</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_INVALID_FEATURE_CLASS_FOR_FEATURE_TYPE                                         &quot;Invalid feature class [{0}] for feature type [{1}].&quot;</span>
+    <span class="mi">2290</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_FRAGMENT_IS_CONFIGURED_FOR_USE_IN_RULES                                        &quot;Rule fragment [{0}] is configured for use in rules(s) [{1}].&quot;</span>
+    <span class="mi">2291</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_FRAGMENT_IS_CONFIGURED_FOR_USE_IN_FRAGMENT                                     &quot;Rule fragment [{0}] is configured for use in fragments(s) [{1}].&quot;</span>
+    <span class="mi">2292</span><span class="p">:</span>  <span class="n">G2Exception</span><span class="p">,</span>                    <span class="c1"># EAS_ERR_CANT_RETRIEVE_OBS_FEATURE_DATA_FOR_OBS_ENT                                     &quot;Could not retrieve observed feature data for observed entity [{0}].&quot;</span>
+    <span class="mi">2293</span><span class="p">:</span>  <span class="n">G2Exception</span><span class="p">,</span>                    <span class="c1"># EAS_ERR_NO_RECORDS_SPECIFIED                                                           &quot;No records specified.&quot;</span>
+    <span class="mi">2294</span><span class="p">:</span>  <span class="n">G2Exception</span><span class="p">,</span>                    <span class="c1"># EAS_ERR_DATA_SOURCE_ID_DOES_NOT_EXIST                                                  &quot;Data source ID [{0}] does not exist.&quot;</span>
+    <span class="mi">2295</span><span class="p">:</span>  <span class="n">G2Exception</span><span class="p">,</span>                    <span class="c1"># EAS_ERR_ETYPE_CODE_DOES_NOT_EXIST                                                      &quot;Entity type code [{0}] does not exist.&quot;</span>
+    <span class="mi">7209</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_DB_BAD_BACKEND_TYPE                                                            &quot;Invalid [SQL] Backend Parameter. Valid values are SQL or HYBRID&quot;</span>
+    <span class="mi">7211</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_DB_BAD_CLUSTER_SIZE                                                            &quot;Cluster [{0}] is configured with an invalid size. Size must be equal to 1.&quot;</span>
+    <span class="mi">7212</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_DB_BAD_CLUSTER_NODE                                                            &quot;Cluster [{0}] Node [{1}] is not configured.&quot;</span>
+    <span class="mi">7216</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_DB_BAD_CLUSTER_DEFINITION                                                      &quot;Cluster [{0}] is not properly configured&quot;</span>
+    <span class="mi">7217</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_DB_CONFLICTING_DEFAULT_SHARD_CONFIG                                            &quot;Cannot specify both default backend database and default backend cluster&quot;</span>
+    <span class="mi">7218</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_DB_CLUSTER_DOES_NOT_EXIST                                                      &quot;Cluster [{0}] does not exist&quot;</span>
+    <span class="mi">7220</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_NO_CONFIG_REGISTERED_IN_DATASTORE                                              &quot;No engine configuration registered in datastore (see https:#senzing.zendesk.com/hc/en-us/articles/360036587313).&quot;</span>
+    <span class="mi">7221</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_NO_CONFIG_REGISTERED_FOR_DATA_ID                                               &quot;No engine configuration registered with data ID [{0}].&quot;</span>
+    <span class="mi">7222</span><span class="p">:</span>  <span class="n">G2Exception</span><span class="p">,</span>                    <span class="c1"># EAS_ERR_FAILED_TO_SET_SYS_VAR_IN_DATASTORE                                             &quot;Could not set system variable value in database for Group[{0}],Code[{1}],Value[{2}].&quot;</span>
+    <span class="mi">7223</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_INVALID_SCHEMA_VERSION_IN_DATASTORE                                            &quot;Invalid version number for datastore schema [version &#39;{0}&#39;].&quot;</span>
+    <span class="mi">7224</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_INVALID_SCHEMA_VERSION_IN_ENGINE                                               &quot;Invalid version number for engine schema [version &#39;{0}&#39;].&quot;</span>
+    <span class="mi">7226</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_INCOMPATIBLE_DATASTORE_SCHEMA_VERSION                                          &quot;Incompatible datastore schema version: [Engine version &#39;{0}&#39;.  Datastore version &#39;{1}&#39; is installed, but must be between &#39;{2}&#39; and &#39;{3}&#39;.]&quot;</span>
+    <span class="mi">7227</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_CONFLICTING_SCHEMA_VERSIONS_IN_DATASTORE                                       &quot;Conflicting version numbers for datastore schema [{0}].&quot;</span>
+    <span class="mi">7228</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_INVALID_SCHEMA_VERSION                                                         &quot;Invalid schema version number [version &#39;{0}&#39;].&quot;</span>
+    <span class="mi">7230</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_ENGINE_CONFIGURATION_FILE_NOT_FOUND                                            &quot;Engine configuration file not found [{0}].&quot;</span>
+    <span class="mi">7232</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_ENGINE_CONFIGURATION_NOT_FOUND                                                 &quot;No engine configuration found.&quot;</span>
+    <span class="mi">7233</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_DATASTORE_ENCRYPTION_SIGNATURE_IS_INCOMPATIBLE                                 &quot;Datastore encryption signature is not compatible.&quot;</span>
+    <span class="mi">7234</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_FAILED_TO_GET_ENCRYPTION_SIGNATURE                                             &quot;Failed to get encryption signature: &#39;{0}&#39;&quot;</span>
+    <span class="mi">7235</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_FTYPE_CONFIGURED_AS_REL_BUT_NO_RTYPE                                           &quot;FTYPE_CODE[{0}] IS CONFIGURED AS A RELATIONSHIP FEATURE TYPE BUT RTYPE_ID IS NOT SET.&quot;</span>
+    <span class="mi">7236</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_DUPLICATE_BEHAVIOR_OVERRIDE_KEY_IN_CFG_FBOVR                                   &quot;Duplicate behavior override keys in CFG_FBOVR -- FTYPE_ID[{0}], UTYPE_CODE[{1}] referenced in CFG_FBOVR.&quot;</span>
+    <span class="mi">7237</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_UNKNOWN_FTYPE_IN_TABLE                                                         &quot;Unknown FTYPE_ID[{0}] referenced in {1}.&quot;</span>
+    <span class="mi">7239</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_INVALID_GENERIC_THRESHOLD_CANDIDATE_CAP                                        &quot;Invalid generic threshold {0} cap [{1}] for [GPLAN_ID[{2}], BEHAVIOR[{3}], FTYPE_ID[{4}]].&quot;</span>
+    <span class="mi">7240</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_INCORRECT_BEHAVIOR_REFERENCED                                                  &quot;Incorrect BEHAVIOR[{0}] referenced in CFG_GENERIC_THRESHOLD for [GPLAN_ID[{1}], FTYPE_ID[{2}]].  FType configured for behavior [{3}]&quot;</span>
+    <span class="mi">7241</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_UNKNOWN_GPLAN_IN_TABLE                                                         &quot;Unknown FTYPE_ID[{0}] referenced in {1}.&quot;</span>
+    <span class="mi">7242</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_MULTIPLE_GENERIC_THRESHOLD_DEFINITIONS                                         &quot;Multiple Generic Threshold definitions for [GPLAN_ID[{0}], BEHAVIOR[{1}], FTYPE_ID[{2}]].&quot;</span>
+    <span class="mi">7243</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_ER_FRAGMENT_HAS_UNDEFINED_DEPENDENT_FRAGMENTS                                  &quot;ER Fragment [{0}] configured with undefined dependent fragments. Fragment [{1}] undefined.&quot;</span>
+    <span class="mi">7244</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_ER_RULE_FRAGMENT_LACKS_REQUIRED_FRAGMENT                                       &quot;ER Rule Fragment configuration lacks the required {0} fragment.&quot;</span>
+    <span class="mi">7245</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_CURRENT_CONFIG_REGISTERED_DOES_NOT_MATCH_DATA_ID                               &quot;Current configuration ID does not match specified data ID [{0}].&quot;</span>
+    <span class="mi">7246</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_INVALID_MAXIMUM_DATASTORE_SCHEMA_VERSION                                       &quot;Invalid maximum datastore version number for engine schema [version &#39;{0}&#39;].&quot;</span>
+    <span class="mi">7247</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_INVALID_MINIMUM_DATASTORE_SCHEMA_VERSION                                       &quot;Invalid minimum datastore version number for engine schema [version &#39;{0}&#39;].&quot;</span>
+    <span class="mi">7303</span><span class="p">:</span>  <span class="n">G2BadInputError</span><span class="p">,</span>                <span class="c1"># EAS_ERR_MANDATORY_SEGMENT_WITH_MISSING_REQUIREMENTS                                    &quot;Mandatory segment with missing requirements:&quot;</span>
+    <span class="mi">7305</span><span class="p">:</span>  <span class="n">G2BadInputError</span><span class="p">,</span>                <span class="c1"># EAS_ERR_MISSING_JSON_ROOT_ELEMENT                                                      &quot;No root element name in json TEMPLATE&quot;</span>
+    <span class="mi">7313</span><span class="p">:</span>  <span class="n">G2BadInputError</span><span class="p">,</span>                <span class="c1"># EAS_ERR_REQUIRED_ELEMENT_WITH_EMPTY_FIELD                                              &quot;A non-empty value for [{0}] must be specified.&quot;</span>
+    <span class="mi">7314</span><span class="p">:</span>  <span class="n">G2BadInputError</span><span class="p">,</span>                <span class="c1"># EAS_ERR_REQUIRED_ELEMENT_NOT_FOUND                                                     &quot;A value for [{0}] must be specified.&quot;</span>
+    <span class="mi">7317</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_FAILED_TO_OPEN_FILE                                                            &quot;Failed to open file: {0}&quot;</span>
+    <span class="mi">7344</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_UNKNOWN_MAPPING_DIRECTIVE                                                      &quot;Invalid mapping directive [{0}] for attribute [{1}].&quot;</span>
+    <span class="mi">7426</span><span class="p">:</span>  <span class="n">G2BadInputError</span><span class="p">,</span>                <span class="c1"># EAS_ERR_XLITERATOR_FAILED                                                              &quot;Transliteration failed&quot;</span>
+    <span class="mi">7511</span><span class="p">:</span>  <span class="n">G2Exception</span><span class="p">,</span>                    <span class="c1"># EAS_ERR_ABORT_ER_AND_RETRY                                                             &quot;Detected change in candidate entity[{0}].  Restarting ER evaluation.&quot;</span>
+    <span class="mi">8000</span><span class="p">:</span>  <span class="n">G2BadInputError</span><span class="p">,</span>                <span class="c1"># EAS_ERR_GNRNP                                                                          &quot;GNR NameParser Failure&quot;</span>
+    <span class="mi">8410</span><span class="p">:</span>  <span class="n">G2Exception</span><span class="p">,</span>                    <span class="c1"># EAS_ERR_UNINITIALIZED_AMBIGUOUS_FEATURE                                                &quot;Cannot use uninitialized ambiguous feature.&quot;</span>
+    <span class="mi">8501</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_SALT_DIGEST_ALGORITHM_NOT_AVAILABLE                                            &quot;Failed to get {0} digest algorithm from ICC.&quot;</span>
+    <span class="mi">8502</span><span class="p">:</span>  <span class="n">G2Exception</span><span class="p">,</span>                    <span class="c1"># EAS_ERR_SALT_DIGEST_CONTEXT_CREATE_FAILED                                              &quot;Failed to create a digest context.&quot;</span>
+    <span class="mi">8503</span><span class="p">:</span>  <span class="n">G2Exception</span><span class="p">,</span>                    <span class="c1"># EAS_ERR_SALT_DIGEST_CONTEXT_INIT_FAILED                                                &quot;Failed {0} to initialise a digest context.&quot;</span>
+    <span class="mi">8504</span><span class="p">:</span>  <span class="n">G2Exception</span><span class="p">,</span>                    <span class="c1"># EAS_ERR_SALT_DIGEST_FAILED                                                             &quot;Failed {0} to digest block {1}.&quot;</span>
+    <span class="mi">8505</span><span class="p">:</span>  <span class="n">G2Exception</span><span class="p">,</span>                    <span class="c1"># EAS_ERR_SALT_DIGEST_FINAL_FAILED                                                       &quot;Failed {0} to complete digest.&quot;</span>
+    <span class="mi">8508</span><span class="p">:</span>  <span class="n">G2Exception</span><span class="p">,</span>                    <span class="c1"># EAS_ERR_SALT_DIGEST_UNKNOWN_EXCEPTION                                                  &quot;Unrecognized exception thrown generating digest.&quot;</span>
+    <span class="mi">8509</span><span class="p">:</span>  <span class="n">G2Exception</span><span class="p">,</span>                    <span class="c1"># EAS_ERR_SALT_DIGEST_ALGORITHM_REQUIRED                                                 &quot;Cannot generate a digest without a valid algorithm.&quot;</span>
+    <span class="mi">8514</span><span class="p">:</span>  <span class="n">G2Exception</span><span class="p">,</span>                    <span class="c1"># EAS_ERR_SALT_RANDOM_FAILED                                                             &quot;Failed {0} to get random content&quot;</span>
+    <span class="mi">8516</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_SALT_MUST_BE_SIZE                                                              &quot;A salt value must be {0} bytes long but the provided one is {1} bytes.&quot;</span>
+    <span class="mi">8517</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_SALT_DOES_NOT_MATCH_CHECKSUM                                                   &quot;The salt value does not match the recorded checksum.&quot;</span>
+    <span class="mi">8520</span><span class="p">:</span>  <span class="n">G2Exception</span><span class="p">,</span>                    <span class="c1"># EAS_ERR_SALT_G2SS_INIT_FAILED                                                          &quot;Secure Store initialization failed.&quot;</span>
+    <span class="mi">8521</span><span class="p">:</span>  <span class="n">G2Exception</span><span class="p">,</span>                    <span class="c1"># EAS_ERR_SALT_G2SS_TOKEN_MUST_BE_INIT                                                   &quot;Hashing with a named salt requires the Secure Store to be initialised.&quot;</span>
+    <span class="mi">8522</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_SALT_G2SS_SOPIN_NOT_VALID                                                      &quot;The Security Officer (SO) PIN is not correct.&quot;</span>
+    <span class="mi">8524</span><span class="p">:</span>  <span class="n">G2Exception</span><span class="p">,</span>                    <span class="c1"># EAS_ERR_SALT_G2SS_INIT_UNKNOWN_EXCEPTION                                               &quot;Secure Store initialization failed with an unrecognised exception&quot;</span>
+    <span class="mi">8525</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_SALT_G2SS_REQUIRED_FOR_LOAD                                                    &quot;Secure Store is required to load salt&quot;</span>
+    <span class="mi">8526</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_SALT_G2SS_REQUIRED_FOR_GENERATE                                                &quot;Secure Store is required to generate salt&quot;</span>
+    <span class="mi">8527</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_SALT_G2SS_REQUIRED_FOR_IMPORT                                                  &quot;Secure Store is required to import salt&quot;</span>
+    <span class="mi">8528</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_SALT_G2SS_REQUIRED_FOR_EXPORT                                                  &quot;Secure Store is required to export salt&quot;</span>
+    <span class="mi">8529</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_SALT_G2SS_REQUIRED_FOR_DELETE                                                  &quot;Secure Store is required to delete salt&quot;</span>
+    <span class="mi">8530</span><span class="p">:</span>  <span class="n">G2Exception</span><span class="p">,</span>                    <span class="c1"># EAS_ERR_SALT_CANNOT_OVERWRITE                                                          &quot;You cannot overwrite an existing salt called {0}&quot;</span>
+    <span class="mi">8536</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_SALT_G2SS_REQUIRED_FOR_LEGACY                                                  &quot;Secure Store is required to add a legacy salt&quot;</span>
+    <span class="mi">8538</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_SALT_G2SS_REQUIRED_FOR_METHOD                                                  &quot;Secure Store is required to change hashing method&quot;</span>
+    <span class="mi">8539</span><span class="p">:</span>  <span class="n">G2Exception</span><span class="p">,</span>                    <span class="c1"># EAS_ERR_SALT_G2SS_ERROR_CHANGING_METHOD                                                &quot;Secure Store error changing hashing method&quot;</span>
+    <span class="mi">8540</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_SALT_WRONG_SIZE                                                                &quot;The object called {0} is not a salt&quot;</span>
+    <span class="mi">8541</span><span class="p">:</span>  <span class="n">G2Exception</span><span class="p">,</span>                    <span class="c1"># EAS_ERR_SALT_BASE64_DECODE_ERROR                                                       &quot;Base64 decoding error in salt {0} at character {1}&quot;</span>
+    <span class="mi">8542</span><span class="p">:</span>  <span class="n">G2Exception</span><span class="p">,</span>                    <span class="c1"># EAS_ERR_SALT_UNINITIALISED                                                             &quot;Must load a salt before using it.&quot;</span>
+    <span class="mi">8543</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_SALT_NOT_FOUND                                                                 &quot;There is no salt called {0} in the Secure Store.&quot;</span>
+    <span class="mi">8544</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_SALT_PASSWORD_NOT_STRONG_ENOUGH                                                &quot;The password must be stronger: {0}&quot;</span>
+    <span class="mi">8545</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_SALT_ADMIN_NAME_REQUIRED                                                       &quot;Specify -name and the name to use for the salt&quot;</span>
+    <span class="mi">8556</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_SALT_ADMIN_METHOD_NOT_RECOGNISED                                               &quot;Hashing method {0} not supported.&quot;</span>
+    <span class="mi">8557</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_SALT_METHOD_DOES_NOT_MATCH                                                     &quot;The hashing method in the configuration ({1}) does not match the method ({2}) of the salt {0}&quot;</span>
+    <span class="mi">8593</span><span class="p">:</span>  <span class="n">G2Exception</span><span class="p">,</span>                    <span class="c1"># EAS_ERR_SALT_HMAC_CONTEXT_INIT_FAILED                                                  &quot;Failed {0} to initialise an HMAC context.&quot;</span>
+    <span class="mi">8594</span><span class="p">:</span>  <span class="n">G2Exception</span><span class="p">,</span>                    <span class="c1"># EAS_ERR_SALT_HMAC_FAILED                                                               &quot;Failed {0} to HMAC block {1}.&quot;</span>
+    <span class="mi">8595</span><span class="p">:</span>  <span class="n">G2Exception</span><span class="p">,</span>                    <span class="c1"># EAS_ERR_SALT_HMAC_FINAL_FAILED                                                         &quot;Failed {0} to complete HMAC.&quot;</span>
+    <span class="mi">8598</span><span class="p">:</span>  <span class="n">G2Exception</span><span class="p">,</span>                    <span class="c1"># EAS_ERR_SALT_HMAC_UNKNOWN_EXCEPTION                                                    &quot;Unrecognized exception thrown generating HMAC.&quot;</span>
+    <span class="mi">8599</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_SALT_UNKNOWN_HASHING_METHOD                                                    &quot;Unrecognized hashing method ({0}) requested.&quot;</span>
+    <span class="mi">8601</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_HASHER_REQUIRES_SECURE_STORE                                                   &quot;Using a named salt requires the Secure Store configured and running&quot;</span>
+    <span class="mi">8602</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_HASHER_CHECKSUM_DOES_NOT_MATCH                                                 &quot;The hashing checksum configured ({1}) does not match the checksum ({2}) of the salt named {0}&quot;</span>
+    <span class="mi">8603</span><span class="p">:</span>  <span class="n">G2Exception</span><span class="p">,</span>                    <span class="c1"># EAS_ERR_HASHER_UNABLE_TO_RECORD_SALT                                                   &quot;Unable to record the configured salt&quot;</span>
+    <span class="mi">8604</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_HASHER_REQUIRES_FUNCTION                                                       &quot;Using hashing requires a configured hashing function&quot;</span>
+    <span class="mi">8605</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_HASHER_EPHEMERAL_OR_NAMED_SALT                                                 &quot;Specify either a named salt or an ephemeral one. Can not have both&quot;</span>
+    <span class="mi">8606</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_HASHER_SALT_REQUIRED                                                           &quot;Hashing requires a salt to be configured.&quot;</span>
+    <span class="mi">8607</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_HASHER_INVALID_ARGS                                                            &quot;Invalid arguments to hashing function. Either a parameter wasn&#39;t provided or a buffer was too small: location={0}, dataPtr={1}, dataLength={2}, outputPtr={3}, outputLength={4}, outpu</span>
+    <span class="mi">8608</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_NO_SALT_VALUE_CONFIGURED                                                       &quot;No salt value is configured. A salt value must be configured if you wish to export the token library.&quot;</span>
+    <span class="mi">8701</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_PARAMETER_NOT_READABLE                                                         &quot;The parameter store does not support a read interface&quot;</span>
+    <span class="mi">8702</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_PARAMETER_NOT_WRITABLE                                                         &quot;The parameter store does not support a write interface&quot;</span>
+    <span class="mi">9000</span><span class="p">:</span>  <span class="n">G2LicenseError</span><span class="p">,</span>                 <span class="c1"># EAS_LIMIT_MAX_OBS_ENT                                                                  &quot;LIMIT: Maximum number of records ingested: {0}&quot;</span>
+    <span class="mi">9107</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_CANT_GET_PARAMETER_FROM_THE_STORE                                              &quot;Cannot get parameter [{0}] from parameter store&quot;</span>
+    <span class="mi">9110</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_INSUFFICIENT_CONFIG                                                            &quot;Insufficient configuration for the {0} table!&quot;</span>
+    <span class="mi">9111</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_PARSE_FRAGMENT                                                                 &quot;ERROR parsing FragmentID[{0}] FragmentName[{1}] : [{2}] is an invalid RuleID dependency&quot;</span>
+    <span class="mi">9112</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_FAILED_TO_OPEN_INI_FILE_FOR_WRITING                                            &quot;Failed to open ini file for writing [{0}]&quot;</span>
+    <span class="mi">9113</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_FAILED_TO_OPEN_INI_FILE_FOR_READING                                            &quot;Failed to open ini file for reading [{0}]&quot;</span>
+    <span class="mi">9115</span><span class="p">:</span>  <span class="n">G2BadInputError</span><span class="p">,</span>                <span class="c1"># EAS_ERR_INPUT_NOT_STANDARDIZED                                                         &quot;Cannot process Observation that has not been standardized&quot;</span>
+    <span class="mi">9116</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_CONFIG_TABLE_NOT_FOUND                                                         &quot;CONFIG information for {0} not found!&quot;</span>
+    <span class="mi">9117</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_CONFIG_TABLE_COLUMN_NOT_FOUND                                                  &quot;CONFIG information for {0} not found in {1}!&quot;</span>
+    <span class="mi">9118</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_CONFIG_TABLE_COLUMN_INDEX_NOT_FOUND                                            &quot;Invalid column index {0} queried from {1} container!&quot;</span>
+    <span class="mi">9119</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_CONFIG_TABLE_COLUMN_NAME_NOT_FOUND                                             &quot;Invalid column name {0} queried from {1} container!&quot;</span>
+    <span class="mi">9120</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_CONFIG_TABLE_MALFORMED                                                         &quot;CONFIG information for {0} is malformed!&quot;</span>
+    <span class="mi">9210</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_DIGEST_CONTEXT_INIT_FAILED                                                     &quot;Unable to initialize Digest Context.&quot;</span>
+    <span class="mi">9220</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_FTYPE_CANNOT_BE_HASHED                                                         &quot;FType configured to be hashed, but cannot be scored.  FTYPE_ID[{0}] FTYPE_CODE[{1}]&quot;</span>
+    <span class="mi">9222</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_FTYPE_CONFIGURED_TO_BE_HASHED_MISSING_SALT                                     &quot;A Feature Type is marked for hashing, but a valid salt value was not found.  FTYPE_ID[{0}] FTYPE_CODE[{1}]&quot;</span>
+    <span class="mi">9224</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_FTYPE_CONFIGURED_TO_BE_HASHED                                                  &quot;FType configured to be hashed, but no hashable data found.  FTYPE_ID[{0}] FTYPE_CODE[{1}]&quot;</span>
+    <span class="mi">9228</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_UNEXPECTED_SALT_CHECKUM_LIST                                                   &quot;The SALT checksum on the Observation does not match the EXPECTED SALT checksum: EXPECTED=[{0}] Observation=[{1}]&quot;</span>
+    <span class="mi">9240</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_CIPHER_CONTEXT_INIT_FAILED                                                     &quot;Unable to initialize an ICC Context.&quot;</span>
+    <span class="mi">9241</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_CIPHER_OP_FAILED                                                               &quot;Unable to perform a required ICC operation.&quot;</span>
+    <span class="mi">9250</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_G2SS_INVALID_LIB                                                               &quot;Invalid ({1}) Secure Store plug-in library: {0}&quot;</span>
+    <span class="mi">9251</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_G2SS_INVALID_URL                                                               &quot;Invalid Secure Store URL: {0}&quot;</span>
+    <span class="mi">9252</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_G2SS_INVALID_PIN                                                               &quot;Invalid Secure Store credential specification: {0}&quot;</span>
+    <span class="mi">9253</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_G2SS_TOKEN_INIT_FAILED                                                         &quot;Secure Store token initialization failed: {0}.&quot;</span>
+    <span class="mi">9254</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_G2SS_TOKEN_UNINITIALISED                                                       &quot;Cannot open a Secure Store session when the token is uninitialized.&quot;</span>
+    <span class="mi">9255</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_G2SS_USER_PIN_UNINITIALISED                                                    &quot;Secure Store credential is uninitialized.&quot;</span>
+    <span class="mi">9256</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_G2SS_SESSION_OPEN                                                              &quot;Cannot open a Secure Store session when one is already open.&quot;</span>
+    <span class="mi">9257</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_G2SS_NO_SESSION                                                                &quot;Cannot use Secure Store without a session.&quot;</span>
+    <span class="mi">9258</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_G2SS_SESSION_OPEN_FAILED                                                       &quot;Secure Store session could not be opened: {0}.&quot;</span>
+    <span class="mi">9259</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_G2SS_ADMIN_LOGIN_FAILED                                                        &quot;Secure Store admin login failed: {0}.&quot;</span>
+    <span class="mi">9260</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_G2SS_USER_LOGIN_FAILED                                                         &quot;Secure Store user login failed: {0}.&quot;</span>
+    <span class="mi">9261</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_G2SS_PKCS11_ERROR                                                              &quot;Secure Store function failed: {0}&quot;</span>
+    <span class="mi">9264</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_G2SS_LOGOUT_FAILED                                                             &quot;Secure Store logout failed: {0}.&quot;</span>
+    <span class="mi">9265</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_G2SS_NEED_RW_SESSION                                                           &quot;Secure Store session must be read/write.&quot;</span>
+    <span class="mi">9266</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_G2SS_UNABLE_TO_VERIFY_KEY                                                      &quot;Secure Store key does not meet requirements.&quot;</span>
+    <span class="mi">9267</span><span class="p">:</span>  <span class="n">G2Exception</span><span class="p">,</span>                    <span class="c1"># EAS_ERR_G2SS_UNABLE_TO_CREATE_KEY                                                      &quot;Secure Store key creation failed.&quot;</span>
+    <span class="mi">9268</span><span class="p">:</span>  <span class="n">G2Exception</span><span class="p">,</span>                    <span class="c1"># EAS_ERR_G2SS_UNABLE_TO_CHANGE_PIN                                                      &quot;Secure Store password change failed: {0}.&quot;</span>
+    <span class="mi">9269</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_G2SS_INVALID_OLD_CREDENTIAL                                                    &quot;Secure Store old credential is invalid.&quot;</span>
+    <span class="mi">9270</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_G2SS_INVALID_NEW_CREDENTIAL                                                    &quot;Secure Store new credential is invalid.&quot;</span>
+    <span class="mi">9271</span><span class="p">:</span>  <span class="n">G2Exception</span><span class="p">,</span>                    <span class="c1"># EAS_ERR_G2SS_OUT_OF_MEMORY                                                             &quot;Secure Store out of memory.&quot;</span>
+    <span class="mi">9272</span><span class="p">:</span>  <span class="n">G2Exception</span><span class="p">,</span>                    <span class="c1"># EAS_ERR_G2SS_FIND_INIT_FAILED                                                          &quot;Secure Store object locating failed: {0}.&quot;</span>
+    <span class="mi">9273</span><span class="p">:</span>  <span class="n">G2Exception</span><span class="p">,</span>                    <span class="c1"># EAS_ERR_G2SS_FIND_FAILED                                                               &quot;Secure Store object find failed: {0}.&quot;</span>
+    <span class="mi">9274</span><span class="p">:</span>  <span class="n">G2Exception</span><span class="p">,</span>                    <span class="c1"># EAS_ERR_G2SS_CRYPTO_SETUP_FAILED                                                       &quot;Secure Store setup of encryption failed: {0}.&quot;</span>
+    <span class="mi">9275</span><span class="p">:</span>  <span class="n">G2Exception</span><span class="p">,</span>                    <span class="c1"># EAS_ERR_G2SS_ENCRYPT_START_FAILED                                                      &quot;Secure Store unable to start encryption: {0}.&quot;</span>
+    <span class="mi">9276</span><span class="p">:</span>  <span class="n">G2Exception</span><span class="p">,</span>                    <span class="c1"># EAS_ERR_G2SS_ENCRYPT_SIZE_FAILED                                                       &quot;Secure Store unable to get the size of encrypted data: {0}.&quot;</span>
+    <span class="mi">9277</span><span class="p">:</span>  <span class="n">G2Exception</span><span class="p">,</span>                    <span class="c1"># EAS_ERR_G2SS_ENCRYPT_FAILED                                                            &quot;Secure Store encryption failed: {0}.&quot;</span>
+    <span class="mi">9278</span><span class="p">:</span>  <span class="n">G2Exception</span><span class="p">,</span>                    <span class="c1"># EAS_ERR_G2SS_DECRYPT_START_FAILED                                                      &quot;Secure Store unable to start decryption: {0}.&quot;</span>
+    <span class="mi">9279</span><span class="p">:</span>  <span class="n">G2Exception</span><span class="p">,</span>                    <span class="c1"># EAS_ERR_G2SS_DECRYPT_FAILED                                                            &quot;Secure Store decryption failed: {0}.&quot;</span>
+    <span class="mi">9280</span><span class="p">:</span>  <span class="n">G2Exception</span><span class="p">,</span>                    <span class="c1"># EAS_ERR_G2SS_OBJECT_SAVE_FAILED                                                        &quot;Secure Store unable to save object: {0}.&quot;</span>
+    <span class="mi">9281</span><span class="p">:</span>  <span class="n">G2Exception</span><span class="p">,</span>                    <span class="c1"># EAS_ERR_G2SS_OBJECT_DELETE_FAILED                                                      &quot;Secure Store unable to delete object: {0}.&quot;</span>
+    <span class="mi">9282</span><span class="p">:</span>  <span class="n">G2Exception</span><span class="p">,</span>                    <span class="c1"># EAS_ERR_G2SS_OBJECT_CHANGE_FAILED                                                      &quot;Secure Store unable to modify object: {0}.&quot;</span>
+    <span class="mi">9283</span><span class="p">:</span>  <span class="n">G2Exception</span><span class="p">,</span>                    <span class="c1"># EAS_ERR_G2SS_UNINITIALISED                                                             &quot;Secure Store has not been initialized&quot;</span>
+    <span class="mi">9284</span><span class="p">:</span>  <span class="n">G2Exception</span><span class="p">,</span>                    <span class="c1"># EAS_ERR_G2SS_INVALID_SLOT_ID                                                           &quot;Can not obtain info on specified slot. Possibly invalid slot ID specified in Secure Store URL: {0}&quot;</span>
+    <span class="mi">9285</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_G2SS_NO_TOKEN_IN_SLOT                                                          &quot;No security token present in slot specified by Secure Store URL: slot ID = {0}&quot;</span>
+    <span class="mi">9286</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_G2SS_TOKEN_NOT_FOUND                                                           &quot;Can not obtain info for security token. Possibly invalid token label and/or slot ID specified in Secure Store URL: {0}&quot;</span>
+    <span class="mi">9287</span><span class="p">:</span>  <span class="n">G2Exception</span><span class="p">,</span>                    <span class="c1"># EAS_ERR_G2SS_TOKEN_IMPL_ERROR                                                          &quot;An internal error occurred in the security token implementation library: Return Code = {0}&quot;</span>
+    <span class="mi">9288</span><span class="p">:</span>  <span class="n">G2Exception</span><span class="p">,</span>                    <span class="c1"># EAS_ERR_G2SS_USER_PIN_PROMPT_FAILED                                                    &quot;Was unable to prompt user for security token authentication.&quot;</span>
+    <span class="mi">9289</span><span class="p">:</span>  <span class="n">G2Exception</span><span class="p">,</span>                    <span class="c1"># EAS_ERR_G2SS_LABEL_CHANGED_SINCE_CONFIG_INIT                                           &quot;Secure Store has been reconfigured since loading.&quot;</span>
+    <span class="mi">9290</span><span class="p">:</span>  <span class="n">G2Exception</span><span class="p">,</span>                    <span class="c1"># EAS_ERR_G2SS_OBJECT_NOT_FOUND                                                          &quot;Secure Store does not have an object called {0}.&quot;</span>
+    <span class="mi">9292</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_G2SS_NO_PASSWORD                                                               &quot;No password supplied&quot;</span>
+    <span class="mi">9293</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_G2SS_NO_SEC_STORE_PREFIX                                                       &quot;Secure Store expects a different format (starting with {0}) when a password is supplied&quot;</span>
+    <span class="mi">9295</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_G2SS_NO_DATA_OBJECTS                                                           &quot;There are no Secure Store objects stored on the token&quot;</span>
+    <span class="mi">9296</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_G2SS_SEC_STORE_ARCHIVE_BAD                                                     &quot;The exported archive appears to be corrupted around object {0}&quot;</span>
+    <span class="mi">9297</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_G2SS_FILE_NOT_FOUND                                                            &quot;Secure Store failed to open {0}&quot;</span>
+    <span class="mi">9298</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_G2SS_FILE_CONTENTS_BAD                                                         &quot;Secure Store contents of {0} not usable.&quot;</span>
+    <span class="mi">9299</span><span class="p">:</span>  <span class="n">G2Exception</span><span class="p">,</span>                    <span class="c1"># EAS_ERR_G2SS_CLASS_NOT_INIT                                                            &quot;Secure Store internal error.&quot;</span>
+    <span class="mi">9300</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_G2SS_PASSWORD_CHECK_ERROR                                                      &quot;Secure Store internal error ({0}) checking password.&quot;</span>
+    <span class="mi">9301</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_MISSING_SEQUENCE_ENTRY                                                         &quot;Missing Sequence Entry[{0}] in the SYS_SEQUENCE table!&quot;</span>
+    <span class="mi">9305</span><span class="p">:</span>  <span class="n">G2Exception</span><span class="p">,</span>                    <span class="c1"># EAS_ERR_SEQUENCE_RETRIES_FAILED                                                        &quot;Retries failed to retrieve Sequence Entry[{0}] in the SYS_SEQUENCE table!  This may mean the CACHE_SIZE is too small.&quot;</span>
+    <span class="mi">9308</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_MISSING_STATUS_ENTRY                                                           &quot;Could not retrieve status entry[{0}] in the SYS_STATUS table!&quot;</span>
+    <span class="mi">9309</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_SEQUENCE_HAS_BEEN_RESET                                                        &quot;Sequence entry[{0}] has been reset.&quot;</span>
+    <span class="mi">9310</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_INVALID_STATUS_ENTRY_VALUE                                                     &quot;Invalid value for status entry[{0}] in the SYS_STATUS table!&quot;</span>
+    <span class="mi">9311</span><span class="p">:</span>  <span class="n">G2Exception</span><span class="p">,</span>                    <span class="c1"># EAS_ERR_COULD_NOT_RECORD_USAGE_TYPE                                                    &quot;Could not record usage type [{0}] in the LIB_UTYPE table!&quot;</span>
+    <span class="mi">9406</span><span class="p">:</span>  <span class="n">G2Exception</span><span class="p">,</span>                    <span class="c1"># EAS_ERR_G2SS_SESSION_MUST_NOT_BE_OPEN                                                  &quot;Secure Store cannot fetch a value with sync if a session is already open.&quot;</span>
+    <span class="mi">9408</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_G2SS_PASSWORD_INADEQUATE                                                       &quot;The provided password is not strong enough: {0}&quot;</span>
+    <span class="mi">9409</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_G2SS_FUNCTION_LIST_NOT_SET                                                     &quot;The security token interface is not yet set&quot;</span>
+    <span class="mi">9410</span><span class="p">:</span>  <span class="n">G2Exception</span><span class="p">,</span>                    <span class="c1"># EAS_ERR_G2SS_PKCS_INIT_FAILED                                                          &quot;Initializing token driver failed {0}&quot;</span>
+    <span class="mi">9411</span><span class="p">:</span>  <span class="n">G2Exception</span><span class="p">,</span>                    <span class="c1"># EAS_ERR_G2SS_PKCS_FINAL_FAILED                                                         &quot;Finalizing token driver failed {0}&quot;</span>
+    <span class="mi">9413</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_G2SS_INCORRECT_PASSWORD                                                        &quot;The export file password appears to be incorrect.&quot;</span>
+    <span class="mi">9414</span><span class="p">:</span>  <span class="n">G2BadInputError</span><span class="p">,</span>                <span class="c1"># EAS_ERR_STRING_IS_INVALID_UTF8                                                         &quot;Invalid data string. Data must be in UTF-8.&quot;</span>
+    <span class="mi">9500</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_TOKEN_LIBRARY_CHECKSUM_MISMATCH                                                &quot;Cannot load token library. The checksum does not match the configuration of this node. Found: [{0}] Expected: [{1}]&quot;</span>
+    <span class="mi">9701</span><span class="p">:</span>  <span class="n">G2Exception</span><span class="p">,</span>                    <span class="c1"># EAS_ERR_CANT_RETRIEVE_INDEX_FROM_MEMORY_ROW                                            &quot;Cannot retrieve index[{0}] from memory row of key[{1}], out of range!&quot;</span>
+    <span class="mi">9703</span><span class="p">:</span>  <span class="n">G2Exception</span><span class="p">,</span>                    <span class="c1"># EAS_ERR_MEMTBL_COL_INDEX_TOO_BIG                                                       &quot;Current field in memory row is passed end of row&quot;</span>
+    <span class="mi">9802</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_INBOUND_OBS_CONFIG_CHECKSUM_MISMATCH                                           &quot;Configuration checksum on inbound observation [{0}] does not match this nodes configuration checksum [{1}]. Cannot process.&quot;</span>
+    <span class="mi">9803</span><span class="p">:</span>  <span class="n">G2ConfigurationError</span><span class="p">,</span>           <span class="c1"># EAS_ERR_CALC_CONFIGCHKSUM_AND_PARAMSTORE_CONFIGCHKSUM_DONT_MATCH                       &quot;The calculated configuration checksum [{0}] does not match the CONFIGURATION_CHECKSUM value in the parameter store [{1}].&quot;</span>
+    <span class="mi">30011</span><span class="p">:</span> <span class="n">G2Exception</span><span class="p">,</span>                    <span class="c1"># EAS_ERR_DELETE_WITH_RESOLVE_ONLY                                                       &quot;Cannot delete an entity with type RESOLVE_ONLY&quot;</span>
+    <span class="mi">30101</span><span class="p">:</span> <span class="n">G2Exception</span><span class="p">,</span>                    <span class="c1"># EAS_ERR_INVALID_SESSION_HANDLE                                                         &quot;Invalid Session Handle [{0}]&quot;</span>
+    <span class="mi">30102</span><span class="p">:</span> <span class="n">G2Exception</span><span class="p">,</span>                    <span class="c1"># EAS_ERR_INVALID_REPORT_HANDLE                                                          &quot;Invalid Report Handle [{0}]&quot;</span>
+    <span class="mi">30103</span><span class="p">:</span> <span class="n">G2Exception</span><span class="p">,</span>                    <span class="c1"># EAS_ERR_INVALID_EXPORT_HANDLE                                                          &quot;Invalid Export Handle [{0}]&quot;</span>
+    <span class="mi">30110</span><span class="p">:</span> <span class="n">G2Exception</span><span class="p">,</span>                    <span class="c1"># EAS_ERR_RESPONSE_MESSAGE_SIZE_LARGER_THAN_BUFFER_SIZE                                  &quot;Response message size [{0}] is larger than buffer size [{1}]&quot;</span>
+    <span class="mi">30111</span><span class="p">:</span> <span class="n">G2Exception</span><span class="p">,</span>                    <span class="c1"># EAS_ERR_RESPONSE_RESIZE_FUNCTION_IS_NOT_PROVIDED                                       &quot;Resize function is not provided&quot;</span>
+    <span class="mi">30112</span><span class="p">:</span> <span class="n">G2Exception</span><span class="p">,</span>                    <span class="c1"># EAS_ERR_RESPONSE_RESIZE_FUNCTION_GAVE_INVALID_RESULT                                   &quot;Resize function returned an invalid result&quot;</span>
+    <span class="mi">30121</span><span class="p">:</span> <span class="n">G2BadInputError</span><span class="p">,</span>                <span class="c1"># EAS_ERR_JSON_PARSING_FAILURE                                                           &quot;JSON Parsing Failure [code={0},offset={1}]&quot;</span>
+    <span class="mi">30122</span><span class="p">:</span> <span class="n">G2BadInputError</span><span class="p">,</span>                <span class="c1"># EAS_ERR_JSON_PARSING_FAILURE_MUST_BE_OBJECT_OR_ARRAY                                   &quot;JSON Parsing Failure.  JSON must be object or array.&quot;</span>
+    <span class="mi">30123</span><span class="p">:</span> <span class="n">G2BadInputError</span><span class="p">,</span>                <span class="c1"># EAS_ERR_JSON_PARSING_FAILURE_OBJECT_HAS_DUPLICATE_KEYS                                 &quot;Json object has duplicate keys.&quot;</span>
+    <span class="mi">30131</span><span class="p">:</span> <span class="n">G2BadInputError</span><span class="p">,</span>                <span class="c1"># EAS_ERR_UNKNOWN_COLUMN_REQUESTED_FOR_CSV_EXPORT                                        &quot;Invalid column [{0}] requested for CSV export.&quot;</span>
+<span class="p">}</span>
+<span class="c1"># fmt: on</span>
+
+
+<span class="c1"># -----------------------------------------------------------------------------</span>
+<span class="c1"># ErrorBuffer class</span>
+<span class="c1"># -----------------------------------------------------------------------------</span>
+
+
+<span class="k">class</span> <span class="nc">ErrorBuffer</span><span class="p">(</span><span class="n">threading</span><span class="o">.</span><span class="n">local</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Buffer to call C&quot;&quot;&quot;</span>
+
+    <span class="c1"># pylint: disable=R0903</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">string_buffer</span> <span class="o">=</span> <span class="n">create_string_buffer</span><span class="p">(</span><span class="mi">65535</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">string_buffer_size</span> <span class="o">=</span> <span class="n">sizeof</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">string_buffer</span><span class="p">)</span>
+
+
+<span class="n">ERROR_BUFFER</span> <span class="o">=</span> <span class="n">ErrorBuffer</span><span class="p">()</span>
+<span class="n">ERROR_BUFFER_TYPE</span> <span class="o">=</span> <span class="n">c_char</span> <span class="o">*</span> <span class="mi">65535</span>
+
+
+<span class="c1"># -----------------------------------------------------------------------------</span>
+<span class="c1"># Helper functions to create a senzing-specific Exception</span>
+<span class="c1"># -----------------------------------------------------------------------------</span>
+
+
+<span class="k">def</span> <span class="nf">get_location</span><span class="p">(</span><span class="n">caller_skip</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Determine caller.</span>
+
+<span class="sd">    :meta private:</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">stack</span> <span class="o">=</span> <span class="n">traceback</span><span class="o">.</span><span class="n">format_stack</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">stack</span><span class="p">[</span><span class="nb">len</span><span class="p">(</span><span class="n">stack</span><span class="p">)</span> <span class="o">-</span> <span class="n">caller_skip</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+
+
+<span class="k">def</span> <span class="nf">get_message_level</span><span class="p">(</span><span class="n">error_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Determine the severity of the error.</span>
+
+<span class="sd">    :meta private:</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">error_levels</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="mi">6000</span><span class="p">:</span> <span class="s2">&quot;PANIC&quot;</span><span class="p">,</span>
+        <span class="mi">5000</span><span class="p">:</span> <span class="s2">&quot;FATAL&quot;</span><span class="p">,</span>
+        <span class="mi">4000</span><span class="p">:</span> <span class="s2">&quot;ERROR&quot;</span><span class="p">,</span>
+        <span class="mi">3000</span><span class="p">:</span> <span class="s2">&quot;WARN&quot;</span><span class="p">,</span>
+        <span class="mi">2000</span><span class="p">:</span> <span class="s2">&quot;INFO&quot;</span><span class="p">,</span>
+        <span class="mi">1000</span><span class="p">:</span> <span class="s2">&quot;DEBUG&quot;</span><span class="p">,</span>
+        <span class="mi">0</span><span class="p">:</span> <span class="s2">&quot;TRACE&quot;</span><span class="p">,</span>
+    <span class="p">}</span>
+    <span class="k">for</span> <span class="n">error_level</span><span class="p">,</span> <span class="n">error_message</span> <span class="ow">in</span> <span class="n">error_levels</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="k">if</span> <span class="n">error_id</span> <span class="o">&gt;</span> <span class="n">error_level</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">error_message</span>
+    <span class="k">return</span> <span class="s2">&quot;PANIC&quot;</span>
+
+
+<span class="k">def</span> <span class="nf">get_message_text</span><span class="p">(</span><span class="n">error_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">id_messages</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span> <span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Format the message text from a template and variables.</span>
+
+<span class="sd">    :meta private:</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">id_messages</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">error_id</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;No message for index </span><span class="si">{</span><span class="n">error_id</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">get_senzing_error_code</span><span class="p">(</span><span class="n">error_text</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Given an exception string, find the exception code.</span>
+
+<span class="sd">    :meta private:</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">error_text</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="mi">0</span>
+    <span class="n">exception_message_splits</span> <span class="o">=</span> <span class="n">error_text</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;|&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">exception_message_splits</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">rstrip</span><span class="p">(</span><span class="s2">&quot;EIW&quot;</span><span class="p">))</span>
+    <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;ERROR: Could not parse error text &#39;</span><span class="si">{error_text}</span><span class="s2">&#39;&quot;</span><span class="p">)</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="mi">9999</span>
+    <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="nb">int</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">result</span>
+
+
+<span class="k">def</span> <span class="nf">get_senzing_error_text</span><span class="p">(</span>
+    <span class="n">get_last_exception</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">ERROR_BUFFER_TYPE</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span> <span class="nb">str</span><span class="p">],</span>  <span class="c1"># type: ignore</span>
+    <span class="n">clear_last_exception</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[],</span> <span class="kc">None</span><span class="p">],</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Get the last exception from the Senzing engine.</span>
+
+<span class="sd">    :meta private:</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">get_last_exception</span><span class="p">(</span>
+        <span class="n">ERROR_BUFFER</span><span class="o">.</span><span class="n">string_buffer</span><span class="p">,</span>
+        <span class="n">sizeof</span><span class="p">(</span><span class="n">ERROR_BUFFER</span><span class="o">.</span><span class="n">string_buffer</span><span class="p">),</span>
+    <span class="p">)</span>
+    <span class="n">clear_last_exception</span><span class="p">()</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="n">ERROR_BUFFER</span><span class="o">.</span><span class="n">string_buffer</span><span class="o">.</span><span class="n">value</span><span class="o">.</span><span class="n">decode</span><span class="p">()</span>
+    <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">result</span>
+
+
+<span class="k">def</span> <span class="nf">new_g2exception</span><span class="p">(</span>
+    <span class="n">get_last_exception</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">ERROR_BUFFER_TYPE</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span> <span class="nb">str</span><span class="p">],</span>  <span class="c1"># type: ignore</span>
+    <span class="n">clear_last_exception</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[],</span> <span class="kc">None</span><span class="p">],</span>
+    <span class="n">product_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">error_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="n">id_messages</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span>
+    <span class="n">caller_skip</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="ne">Exception</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Generate a new Senzing Exception based on the error_id.</span>
+
+<span class="sd">    :meta private:</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">senzing_error_text</span> <span class="o">=</span> <span class="n">get_senzing_error_text</span><span class="p">(</span>
+        <span class="n">get_last_exception</span><span class="p">,</span> <span class="n">clear_last_exception</span>
+    <span class="p">)</span>
+    <span class="n">senzing_error_code</span> <span class="o">=</span> <span class="n">get_senzing_error_code</span><span class="p">(</span><span class="n">senzing_error_text</span><span class="p">)</span>
+    <span class="n">message</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;time&quot;</span><span class="p">:</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">utcnow</span><span class="p">()</span><span class="o">.</span><span class="n">isoformat</span><span class="p">(</span><span class="s2">&quot;T&quot;</span><span class="p">),</span>
+        <span class="s2">&quot;text&quot;</span><span class="p">:</span> <span class="n">get_message_text</span><span class="p">(</span><span class="n">error_id</span><span class="p">,</span> <span class="n">id_messages</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">),</span>
+        <span class="s2">&quot;level&quot;</span><span class="p">:</span> <span class="n">get_message_level</span><span class="p">(</span><span class="n">error_id</span><span class="p">),</span>
+        <span class="s2">&quot;id&quot;</span><span class="p">:</span> <span class="sa">f</span><span class="s2">&quot;senzing-</span><span class="si">{</span><span class="n">product_id</span><span class="si">}{</span><span class="n">error_id</span><span class="si">:</span><span class="s2">4d</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;location&quot;</span><span class="p">:</span> <span class="n">get_location</span><span class="p">(</span><span class="n">caller_skip</span><span class="p">),</span>
+        <span class="s2">&quot;errorCode&quot;</span><span class="p">:</span> <span class="n">senzing_error_code</span><span class="p">,</span>
+        <span class="s2">&quot;errorText&quot;</span><span class="p">:</span> <span class="n">senzing_error_text</span><span class="p">,</span>
+        <span class="s2">&quot;details&quot;</span><span class="p">:</span> <span class="n">args</span><span class="p">,</span>
+    <span class="p">}</span>
+    <span class="n">senzing_error_class</span> <span class="o">=</span> <span class="n">EXCEPTION_MAP</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">senzing_error_code</span><span class="p">,</span> <span class="n">G2Exception</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">senzing_error_class</span><span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">message</span><span class="p">))</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Senzing.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -1,0 +1,1711 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>senzing.g2engine_abstract &mdash; g2-sdk-python-next  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=19f00094" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
+        <script src="../../_static/doctools.js?v=888ff710"></script>
+        <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            g2-sdk-python-next
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <!-- Local TOC -->
+              <div class="local-toc"></div>
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">g2-sdk-python-next</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">senzing.g2engine_abstract</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for senzing.g2engine_abstract</h1><div class="highlight"><pre>
+<span></span><span class="ch">#! /usr/bin/env python3</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">TODO: g2engine_abstract.py</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="c1"># pylint: disable=C0302</span>
+<span class="c1"># AC - Temp disables to get changes in for move to senzing garage</span>
+<span class="c1"># pylint: disable=W0511,W1113</span>
+
+
+<span class="c1"># Import from standard library. https://docs.python.org/3/library/</span>
+
+<span class="kn">import</span> <span class="nn">json</span>
+<span class="kn">from</span> <span class="nn">abc</span> <span class="kn">import</span> <span class="n">ABC</span><span class="p">,</span> <span class="n">abstractmethod</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Union</span><span class="p">,</span> <span class="n">cast</span>
+
+<span class="kn">from</span> <span class="nn">.g2engineflags</span> <span class="kn">import</span> <span class="n">G2EngineFlags</span>
+
+<span class="c1"># Metadata</span>
+
+<span class="c1"># __all__ = [&quot;G2EngineAbstract&quot;, &quot;WithInfoResponsesAbstract&quot;]</span>
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;G2EngineAbstract&quot;</span><span class="p">]</span>
+<span class="n">__version__</span> <span class="o">=</span> <span class="s2">&quot;0.0.1&quot;</span>  <span class="c1"># See https://www.python.org/dev/peps/pep-0396/</span>
+<span class="n">__date__</span> <span class="o">=</span> <span class="s2">&quot;2023-10-30&quot;</span>
+<span class="n">__updated__</span> <span class="o">=</span> <span class="s2">&quot;2023-10-30&quot;</span>
+
+
+<span class="c1"># -------------------------------------------------------------------------</span>
+<span class="c1"># Classes</span>
+<span class="c1"># -------------------------------------------------------------------------</span>
+
+
+<span class="k">class</span> <span class="nc">G2EngineAbstract</span><span class="p">(</span><span class="n">ABC</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    G2 engine module access library</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># -------------------------------------------------------------------------</span>
+    <span class="c1"># Messages</span>
+    <span class="c1"># -------------------------------------------------------------------------</span>
+
+    <span class="c1"># TODO Change to f-strings?</span>
+    <span class="c1"># TODO Change to be same as g2Product.G2Engine_&lt;method_name()&gt;</span>
+    <span class="c1"># TODO Reorder and sort - some APIs are going away and search was added to end temporarily</span>
+    <span class="c1"># TODO Does it make sense to have G2_, that isn&#39;t the method name</span>
+    <span class="n">PREFIX</span> <span class="o">=</span> <span class="s2">&quot;g2engine.&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot; :meta private: &quot;&quot;&quot;</span>
+
+    <span class="n">ID_MESSAGES</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="mi">4001</span><span class="p">:</span> <span class="n">PREFIX</span> <span class="o">+</span> <span class="s2">&quot;G2_addRecord(</span><span class="si">{0}</span><span class="s2">, </span><span class="si">{1}</span><span class="s2">, </span><span class="si">{2}</span><span class="s2">) failed. Return code: </span><span class="si">{3}</span><span class="s2">&quot;</span><span class="p">,</span>
+        <span class="mi">4002</span><span class="p">:</span> <span class="p">(</span>
+            <span class="n">PREFIX</span> <span class="o">+</span> <span class="s2">&quot;G2_addRecordWithInfo(</span><span class="si">{0}</span><span class="s2">, </span><span class="si">{1}</span><span class="s2">, </span><span class="si">{2}</span><span class="s2">, </span><span class="si">{3}</span><span class="s2">) failed. Return code: </span><span class="si">{4}</span><span class="s2">&quot;</span>
+        <span class="p">),</span>
+        <span class="mi">4006</span><span class="p">:</span> <span class="n">PREFIX</span> <span class="o">+</span> <span class="s2">&quot;G2_closeExport failed. Return code: </span><span class="si">{0}</span><span class="s2">&quot;</span><span class="p">,</span>
+        <span class="mi">4007</span><span class="p">:</span> <span class="n">PREFIX</span> <span class="o">+</span> <span class="s2">&quot;G2_countRedoRecords failed. Return code: </span><span class="si">{0}</span><span class="s2">&quot;</span><span class="p">,</span>
+        <span class="mi">4008</span><span class="p">:</span> <span class="n">PREFIX</span> <span class="o">+</span> <span class="s2">&quot;G2_deleteRecord(</span><span class="si">{0}</span><span class="s2">, </span><span class="si">{1}</span><span class="s2">, </span><span class="si">{2}</span><span class="s2">) failed. Return code: </span><span class="si">{3}</span><span class="s2">&quot;</span><span class="p">,</span>
+        <span class="mi">4009</span><span class="p">:</span> <span class="p">(</span>
+            <span class="n">PREFIX</span>
+            <span class="o">+</span> <span class="s2">&quot;G2_deleteRecordWithInfo(</span><span class="si">{0}</span><span class="s2">, </span><span class="si">{1}</span><span class="s2">, </span><span class="si">{2}</span><span class="s2">, </span><span class="si">{3}</span><span class="s2">) failed. Return code: </span><span class="si">{4}</span><span class="s2">&quot;</span>
+        <span class="p">),</span>
+        <span class="mi">4010</span><span class="p">:</span> <span class="n">PREFIX</span> <span class="o">+</span> <span class="s2">&quot;G2_destroy() failed. Return code: </span><span class="si">{0}</span><span class="s2">&quot;</span><span class="p">,</span>
+        <span class="mi">4013</span><span class="p">:</span> <span class="n">PREFIX</span> <span class="o">+</span> <span class="s2">&quot;G2_exportCSVEntityReport(</span><span class="si">{0}</span><span class="s2">, </span><span class="si">{1}</span><span class="s2">) failed. Return code: </span><span class="si">{2}</span><span class="s2">&quot;</span><span class="p">,</span>
+        <span class="mi">4014</span><span class="p">:</span> <span class="n">PREFIX</span> <span class="o">+</span> <span class="s2">&quot;G2_exportJSONEntityReport(</span><span class="si">{0}</span><span class="s2">) failed. Return code: </span><span class="si">{1}</span><span class="s2">&quot;</span><span class="p">,</span>
+        <span class="mi">4015</span><span class="p">:</span> <span class="n">PREFIX</span> <span class="o">+</span> <span class="s2">&quot;G2_fetchNext(</span><span class="si">{0}</span><span class="s2">) failed. Return code: </span><span class="si">{1}</span><span class="s2">&quot;</span><span class="p">,</span>
+        <span class="c1"># NOTE Commented out for now to discuss these</span>
+        <span class="c1"># 4016: (</span>
+        <span class="c1">#     PREFIX</span>
+        <span class="c1">#     + &quot;G2_findInterestingEntitiesByEntityID({0}, {1}) failed. Return code: {2}&quot;</span>
+        <span class="c1"># ),</span>
+        <span class="c1"># 4017: (</span>
+        <span class="c1">#     PREFIX</span>
+        <span class="c1">#     + &quot;G2_findInterestingEntitiesByRecordID({0}, {1}, {2}) failed. Return&quot;</span>
+        <span class="c1">#     &quot; code: {3}&quot;</span>
+        <span class="c1"># ),</span>
+        <span class="mi">4018</span><span class="p">:</span> <span class="p">(</span>
+            <span class="n">PREFIX</span>
+            <span class="o">+</span> <span class="s2">&quot;G2_findNetworkByEntityID(</span><span class="si">{0}</span><span class="s2">, </span><span class="si">{1}</span><span class="s2">, </span><span class="si">{2}</span><span class="s2">, </span><span class="si">{3}</span><span class="s2">) failed. Return code: </span><span class="si">{4}</span><span class="s2">&quot;</span>
+        <span class="p">),</span>
+        <span class="mi">4019</span><span class="p">:</span> <span class="p">(</span>
+            <span class="n">PREFIX</span>
+            <span class="o">+</span> <span class="s2">&quot;G2_findNetworkByEntityID_V2(</span><span class="si">{0}</span><span class="s2">, </span><span class="si">{1}</span><span class="s2">, </span><span class="si">{2}</span><span class="s2">, </span><span class="si">{3}</span><span class="s2">, </span><span class="si">{4}</span><span class="s2">) failed. Return&quot;</span>
+            <span class="s2">&quot; code: </span><span class="si">{5}</span><span class="s2">&quot;</span>
+        <span class="p">),</span>
+        <span class="mi">4020</span><span class="p">:</span> <span class="p">(</span>
+            <span class="n">PREFIX</span>
+            <span class="o">+</span> <span class="s2">&quot;G2_findNetworkByRecordID(</span><span class="si">{0}</span><span class="s2">, </span><span class="si">{1}</span><span class="s2">, </span><span class="si">{2}</span><span class="s2">, </span><span class="si">{3}</span><span class="s2">) failed. Return code: </span><span class="si">{4}</span><span class="s2">&quot;</span>
+        <span class="p">),</span>
+        <span class="mi">4021</span><span class="p">:</span> <span class="p">(</span>
+            <span class="n">PREFIX</span>
+            <span class="o">+</span> <span class="s2">&quot;G2_findNetworkByRecordID_V2(</span><span class="si">{0}</span><span class="s2">, </span><span class="si">{1}</span><span class="s2">, </span><span class="si">{2}</span><span class="s2">, </span><span class="si">{3}</span><span class="s2">, </span><span class="si">{4}</span><span class="s2">) failed. Return&quot;</span>
+            <span class="s2">&quot; code: </span><span class="si">{5}</span><span class="s2">&quot;</span>
+        <span class="p">),</span>
+        <span class="mi">4022</span><span class="p">:</span> <span class="n">PREFIX</span> <span class="o">+</span> <span class="s2">&quot;G2_findPathByEntityID(</span><span class="si">{0}</span><span class="s2">, </span><span class="si">{1}</span><span class="s2">, </span><span class="si">{2}</span><span class="s2">) failed. Return code: </span><span class="si">{3}</span><span class="s2">&quot;</span><span class="p">,</span>
+        <span class="mi">4023</span><span class="p">:</span> <span class="p">(</span>
+            <span class="n">PREFIX</span>
+            <span class="o">+</span> <span class="s2">&quot;G2_findPathByEntityID_V2(</span><span class="si">{0}</span><span class="s2">, </span><span class="si">{1}</span><span class="s2">, </span><span class="si">{2}</span><span class="s2">, </span><span class="si">{3}</span><span class="s2">) failed. Return code: </span><span class="si">{4}</span><span class="s2">&quot;</span>
+        <span class="p">),</span>
+        <span class="mi">4024</span><span class="p">:</span> <span class="p">(</span>
+            <span class="n">PREFIX</span>
+            <span class="o">+</span> <span class="s2">&quot;G2_findPathByRecordID(</span><span class="si">{0}</span><span class="s2">, </span><span class="si">{1}</span><span class="s2">, </span><span class="si">{2}</span><span class="s2">, </span><span class="si">{3}</span><span class="s2">, </span><span class="si">{4}</span><span class="s2">) failed. Return code: </span><span class="si">{5}</span><span class="s2">&quot;</span>
+        <span class="p">),</span>
+        <span class="mi">4025</span><span class="p">:</span> <span class="p">(</span>
+            <span class="n">PREFIX</span>
+            <span class="o">+</span> <span class="s2">&quot;G2_findPathByRecordID_V2(</span><span class="si">{0}</span><span class="s2">, </span><span class="si">{1}</span><span class="s2">, </span><span class="si">{2}</span><span class="s2">, </span><span class="si">{3}</span><span class="s2">, </span><span class="si">{4}</span><span class="s2">, </span><span class="si">{5}</span><span class="s2">) failed. Return&quot;</span>
+            <span class="s2">&quot; code: </span><span class="si">{6}</span><span class="s2">&quot;</span>
+        <span class="p">),</span>
+        <span class="mi">4026</span><span class="p">:</span> <span class="p">(</span>
+            <span class="n">PREFIX</span> <span class="o">+</span> <span class="s2">&quot;G2_findPathExcludingByEntityID(</span><span class="si">{0}</span><span class="s2">, </span><span class="si">{1}</span><span class="s2">, </span><span class="si">{2}</span><span class="s2">, </span><span class="si">{3}</span><span class="s2">) failed. Return&quot;</span>
+            <span class="s2">&quot; code: </span><span class="si">{4}</span><span class="s2">&quot;</span>
+        <span class="p">),</span>
+        <span class="mi">4027</span><span class="p">:</span> <span class="p">(</span>
+            <span class="n">PREFIX</span>
+            <span class="o">+</span> <span class="s2">&quot;G2_findPathExcludingByEntityID_V2(</span><span class="si">{0}</span><span class="s2">, </span><span class="si">{1}</span><span class="s2">, </span><span class="si">{2}</span><span class="s2">, </span><span class="si">{3}</span><span class="s2">, </span><span class="si">{4}</span><span class="s2">) failed.&quot;</span>
+            <span class="s2">&quot; Return code: </span><span class="si">{5}</span><span class="s2">&quot;</span>
+        <span class="p">),</span>
+        <span class="mi">4028</span><span class="p">:</span> <span class="p">(</span>
+            <span class="n">PREFIX</span>
+            <span class="o">+</span> <span class="s2">&quot;G2_findPathExcludingByRecordID(</span><span class="si">{0}</span><span class="s2">, </span><span class="si">{1}</span><span class="s2">, </span><span class="si">{2}</span><span class="s2">, </span><span class="si">{3}</span><span class="s2"> </span><span class="si">{4}</span><span class="s2">, </span><span class="si">{5}</span><span class="s2">) failed.&quot;</span>
+            <span class="s2">&quot; Return code: </span><span class="si">{6}</span><span class="s2">&quot;</span>
+        <span class="p">),</span>
+        <span class="mi">4029</span><span class="p">:</span> <span class="p">(</span>
+            <span class="n">PREFIX</span>
+            <span class="o">+</span> <span class="s2">&quot;G2_findPathExcludingByRecordID_V2(</span><span class="si">{0}</span><span class="s2">, </span><span class="si">{1}</span><span class="s2">, </span><span class="si">{2}</span><span class="s2">, </span><span class="si">{3}</span><span class="s2"> </span><span class="si">{4}</span><span class="s2">, </span><span class="si">{5}</span><span class="s2">, </span><span class="si">{6}</span><span class="s2">)&quot;</span>
+            <span class="s2">&quot; failed. Return code: </span><span class="si">{7}</span><span class="s2">&quot;</span>
+        <span class="p">),</span>
+        <span class="mi">4030</span><span class="p">:</span> <span class="p">(</span>
+            <span class="n">PREFIX</span>
+            <span class="o">+</span> <span class="s2">&quot;G2_findPathIncludingSourceByEntityID(</span><span class="si">{0}</span><span class="s2">, </span><span class="si">{1}</span><span class="s2">, </span><span class="si">{2}</span><span class="s2">, </span><span class="si">{3}</span><span class="s2">, </span><span class="si">{4}</span><span class="s2">) failed.&quot;</span>
+            <span class="s2">&quot; Return code: </span><span class="si">{5}</span><span class="s2">&quot;</span>
+        <span class="p">),</span>
+        <span class="mi">4031</span><span class="p">:</span> <span class="p">(</span>
+            <span class="n">PREFIX</span>
+            <span class="o">+</span> <span class="s2">&quot;G2_findPathIncludingSourceByEntityID_V2(</span><span class="si">{0}</span><span class="s2">, </span><span class="si">{1}</span><span class="s2">, </span><span class="si">{2}</span><span class="s2">, </span><span class="si">{3}</span><span class="s2">, </span><span class="si">{4}</span><span class="s2">, </span><span class="si">{5}</span><span class="s2">)&quot;</span>
+            <span class="s2">&quot; failed. Return code: </span><span class="si">{6}</span><span class="s2">&quot;</span>
+        <span class="p">),</span>
+        <span class="mi">4032</span><span class="p">:</span> <span class="p">(</span>
+            <span class="n">PREFIX</span>
+            <span class="o">+</span> <span class="s2">&quot;G2_findPathIncludingSourceByRecordID(</span><span class="si">{0}</span><span class="s2">, </span><span class="si">{1}</span><span class="s2">, </span><span class="si">{2}</span><span class="s2">, </span><span class="si">{3}</span><span class="s2"> </span><span class="si">{4}</span><span class="s2">, </span><span class="si">{5}</span><span class="s2">, </span><span class="si">{6}</span><span class="s2">)&quot;</span>
+            <span class="s2">&quot; failed. Return code: </span><span class="si">{7}</span><span class="s2">&quot;</span>
+        <span class="p">),</span>
+        <span class="mi">4033</span><span class="p">:</span> <span class="p">(</span>
+            <span class="n">PREFIX</span>
+            <span class="o">+</span> <span class="s2">&quot;G2_findPathIncludingSourceByRecordID_V2(</span><span class="si">{0}</span><span class="s2">, </span><span class="si">{1}</span><span class="s2">, </span><span class="si">{2}</span><span class="s2">, </span><span class="si">{3}</span><span class="s2"> </span><span class="si">{4}</span><span class="s2">, </span><span class="si">{5}</span><span class="s2">,&quot;</span>
+            <span class="s2">&quot; </span><span class="si">{6}</span><span class="s2">, </span><span class="si">{7}</span><span class="s2">) failed. Return code: </span><span class="si">{8}</span><span class="s2">&quot;</span>
+        <span class="p">),</span>
+        <span class="mi">4034</span><span class="p">:</span> <span class="n">PREFIX</span> <span class="o">+</span> <span class="s2">&quot;G2_getActiveConfigID() failed. Return code: </span><span class="si">{0}</span><span class="s2">&quot;</span><span class="p">,</span>
+        <span class="mi">4035</span><span class="p">:</span> <span class="n">PREFIX</span> <span class="o">+</span> <span class="s2">&quot;G2_getEntityByEntityID(</span><span class="si">{0}</span><span class="s2">, </span><span class="si">{1}</span><span class="s2">) failed. Return code: </span><span class="si">{2}</span><span class="s2">&quot;</span><span class="p">,</span>
+        <span class="mi">4036</span><span class="p">:</span> <span class="n">PREFIX</span> <span class="o">+</span> <span class="s2">&quot;G2_getEntityByEntityID_V2(</span><span class="si">{0}</span><span class="s2">, </span><span class="si">{1}</span><span class="s2">) failed. Return code: </span><span class="si">{2}</span><span class="s2">&quot;</span><span class="p">,</span>
+        <span class="mi">4037</span><span class="p">:</span> <span class="n">PREFIX</span> <span class="o">+</span> <span class="s2">&quot;G2_getEntityByRecordID(</span><span class="si">{0}</span><span class="s2">, </span><span class="si">{1}</span><span class="s2">) failed. Return code: </span><span class="si">{2}</span><span class="s2">&quot;</span><span class="p">,</span>
+        <span class="mi">4038</span><span class="p">:</span> <span class="p">(</span>
+            <span class="n">PREFIX</span> <span class="o">+</span> <span class="s2">&quot;G2_getEntityByRecordID_V2(</span><span class="si">{0}</span><span class="s2">, </span><span class="si">{1}</span><span class="s2">, </span><span class="si">{2}</span><span class="s2">) failed. Return code: </span><span class="si">{3}</span><span class="s2">&quot;</span>
+        <span class="p">),</span>
+        <span class="mi">4039</span><span class="p">:</span> <span class="n">PREFIX</span> <span class="o">+</span> <span class="s2">&quot;G2_getLastException() failed. Return code: </span><span class="si">{0}</span><span class="s2">&quot;</span><span class="p">,</span>
+        <span class="mi">4040</span><span class="p">:</span> <span class="n">PREFIX</span> <span class="o">+</span> <span class="s2">&quot;G2_getRecord(</span><span class="si">{0}</span><span class="s2">, </span><span class="si">{1}</span><span class="s2">) failed. Return code: </span><span class="si">{2}</span><span class="s2">&quot;</span><span class="p">,</span>
+        <span class="mi">4041</span><span class="p">:</span> <span class="n">PREFIX</span> <span class="o">+</span> <span class="s2">&quot;G2_getRecord_V2(</span><span class="si">{0}</span><span class="s2">, </span><span class="si">{1}</span><span class="s2">, </span><span class="si">{2}</span><span class="s2">) failed. Return code: </span><span class="si">{3}</span><span class="s2">&quot;</span><span class="p">,</span>
+        <span class="mi">4042</span><span class="p">:</span> <span class="n">PREFIX</span> <span class="o">+</span> <span class="s2">&quot;G2_getRedoRecord() failed. Return code: </span><span class="si">{0}</span><span class="s2">&quot;</span><span class="p">,</span>
+        <span class="mi">4043</span><span class="p">:</span> <span class="n">PREFIX</span> <span class="o">+</span> <span class="s2">&quot;G2_getRepositoryLastModifiedTime() failed. Return code: </span><span class="si">{0}</span><span class="s2">&quot;</span><span class="p">,</span>
+        <span class="mi">4044</span><span class="p">:</span> <span class="n">PREFIX</span> <span class="o">+</span> <span class="s2">&quot;G2_getVirtualEntityByRecordID(</span><span class="si">{0}</span><span class="s2">) failed. Return code: </span><span class="si">{1}</span><span class="s2">&quot;</span><span class="p">,</span>
+        <span class="mi">4045</span><span class="p">:</span> <span class="p">(</span>
+            <span class="n">PREFIX</span>
+            <span class="o">+</span> <span class="s2">&quot;G2_getVirtualEntityByRecordID_V2(</span><span class="si">{0}</span><span class="s2">, </span><span class="si">{1}</span><span class="s2">) failed. Return code: </span><span class="si">{2}</span><span class="s2">&quot;</span>
+        <span class="p">),</span>
+        <span class="mi">4046</span><span class="p">:</span> <span class="n">PREFIX</span> <span class="o">+</span> <span class="s2">&quot;G2_howEntityByEntityID(</span><span class="si">{0}</span><span class="s2">) failed. Return code: </span><span class="si">{1}</span><span class="s2">&quot;</span><span class="p">,</span>
+        <span class="mi">4047</span><span class="p">:</span> <span class="n">PREFIX</span> <span class="o">+</span> <span class="s2">&quot;G2_howEntityByEntityID_V2(</span><span class="si">{0}</span><span class="s2">, </span><span class="si">{1}</span><span class="s2">) failed. Return code: </span><span class="si">{2}</span><span class="s2">&quot;</span><span class="p">,</span>
+        <span class="mi">4048</span><span class="p">:</span> <span class="n">PREFIX</span> <span class="o">+</span> <span class="s2">&quot;G2_init(</span><span class="si">{0}</span><span class="s2">, </span><span class="si">{1}</span><span class="s2">, </span><span class="si">{2}</span><span class="s2">) failed. Return code: </span><span class="si">{3}</span><span class="s2">&quot;</span><span class="p">,</span>
+        <span class="mi">4049</span><span class="p">:</span> <span class="p">(</span>
+            <span class="n">PREFIX</span> <span class="o">+</span> <span class="s2">&quot;G2_initWithConfigID(</span><span class="si">{0}</span><span class="s2">, </span><span class="si">{1}</span><span class="s2">, </span><span class="si">{2}</span><span class="s2">, </span><span class="si">{3}</span><span class="s2">) failed. Return code: </span><span class="si">{4}</span><span class="s2">&quot;</span>
+        <span class="p">),</span>
+        <span class="mi">4050</span><span class="p">:</span> <span class="n">PREFIX</span> <span class="o">+</span> <span class="s2">&quot;G2_primeEngine() failed. Return code: </span><span class="si">{0}</span><span class="s2">&quot;</span><span class="p">,</span>
+        <span class="mi">4051</span><span class="p">:</span> <span class="n">PREFIX</span> <span class="o">+</span> <span class="s2">&quot;G2_process(</span><span class="si">{0}</span><span class="s2">) failed. Return code </span><span class="si">{1}</span><span class="s2">&quot;</span><span class="p">,</span>
+        <span class="mi">4052</span><span class="p">:</span> <span class="n">PREFIX</span> <span class="o">+</span> <span class="s2">&quot;G2_processRedoRecord() failed. Return code: </span><span class="si">{0}</span><span class="s2">&quot;</span><span class="p">,</span>
+        <span class="mi">4053</span><span class="p">:</span> <span class="n">PREFIX</span> <span class="o">+</span> <span class="s2">&quot;G2_processRedoRecordWithInfo(</span><span class="si">{0}</span><span class="s2">) failed. Return code: </span><span class="si">{0}</span><span class="s2">&quot;</span><span class="p">,</span>
+        <span class="mi">4054</span><span class="p">:</span> <span class="n">PREFIX</span> <span class="o">+</span> <span class="s2">&quot;G2_processWithInfo(</span><span class="si">{0}</span><span class="s2">, </span><span class="si">{1}</span><span class="s2">) failed. Return code: </span><span class="si">{2}</span><span class="s2">&quot;</span><span class="p">,</span>
+        <span class="mi">4055</span><span class="p">:</span> <span class="n">PREFIX</span> <span class="o">+</span> <span class="s2">&quot;G2_processWithResponse(</span><span class="si">{0}</span><span class="s2">) failed. Return code: </span><span class="si">{1}</span><span class="s2">&quot;</span><span class="p">,</span>
+        <span class="mi">4056</span><span class="p">:</span> <span class="n">PREFIX</span> <span class="o">+</span> <span class="s2">&quot;G2_processWithResponseResize(</span><span class="si">{0}</span><span class="s2">) failed. Return code: </span><span class="si">{1}</span><span class="s2">&quot;</span><span class="p">,</span>
+        <span class="c1"># 4057: PREFIX + &quot;G2_purgeRepository() failed. Return code: {0}&quot;,</span>
+        <span class="mi">4058</span><span class="p">:</span> <span class="n">PREFIX</span> <span class="o">+</span> <span class="s2">&quot;G2_reevaluateEntity(</span><span class="si">{0}</span><span class="s2">, </span><span class="si">{1}</span><span class="s2">) failed. Return code: </span><span class="si">{2}</span><span class="s2">&quot;</span><span class="p">,</span>
+        <span class="mi">4059</span><span class="p">:</span> <span class="n">PREFIX</span> <span class="o">+</span> <span class="s2">&quot;G2_reevaluateEntityWithInfo(</span><span class="si">{0}</span><span class="s2">, </span><span class="si">{1}</span><span class="s2">) failed. Return code: </span><span class="si">{2}</span><span class="s2">&quot;</span><span class="p">,</span>
+        <span class="mi">4060</span><span class="p">:</span> <span class="n">PREFIX</span> <span class="o">+</span> <span class="s2">&quot;G2_reevaluateRecord(</span><span class="si">{0}</span><span class="s2">, </span><span class="si">{1}</span><span class="s2">, </span><span class="si">{2}</span><span class="s2">) failed. Return code: </span><span class="si">{3}</span><span class="s2">&quot;</span><span class="p">,</span>
+        <span class="mi">4061</span><span class="p">:</span> <span class="p">(</span>
+            <span class="n">PREFIX</span>
+            <span class="o">+</span> <span class="s2">&quot;G2_reevaluateRecordWithInfo(</span><span class="si">{0}</span><span class="s2">, </span><span class="si">{1}</span><span class="s2">, </span><span class="si">{2}</span><span class="s2">) failed. Return code: </span><span class="si">{3}</span><span class="s2">&quot;</span>
+        <span class="p">),</span>
+        <span class="mi">4062</span><span class="p">:</span> <span class="n">PREFIX</span> <span class="o">+</span> <span class="s2">&quot;G2_reinit(</span><span class="si">{0}</span><span class="s2">) failed. Return code: </span><span class="si">{1}</span><span class="s2">&quot;</span><span class="p">,</span>
+        <span class="mi">4063</span><span class="p">:</span> <span class="n">PREFIX</span> <span class="o">+</span> <span class="s2">&quot;G2_replaceRecord(</span><span class="si">{0}</span><span class="s2">, </span><span class="si">{1}</span><span class="s2">, </span><span class="si">{2}</span><span class="s2">, </span><span class="si">{3}</span><span class="s2">) failed. Return code: </span><span class="si">{4}</span><span class="s2">&quot;</span><span class="p">,</span>
+        <span class="mi">4064</span><span class="p">:</span> <span class="p">(</span>
+            <span class="n">PREFIX</span> <span class="o">+</span> <span class="s2">&quot;G2_replaceRecordWithInfo(</span><span class="si">{0}</span><span class="s2">, </span><span class="si">{1}</span><span class="s2">, </span><span class="si">{2}</span><span class="s2">, </span><span class="si">{3}</span><span class="s2">, </span><span class="si">{4}</span><span class="s2">) failed. Return&quot;</span>
+            <span class="s2">&quot; code: </span><span class="si">{5}</span><span class="s2">&quot;</span>
+        <span class="p">),</span>
+        <span class="mi">4065</span><span class="p">:</span> <span class="n">PREFIX</span> <span class="o">+</span> <span class="s2">&quot;G2_searchByAttributes(</span><span class="si">{0}</span><span class="s2">) failed. Return code: </span><span class="si">{1}</span><span class="s2">&quot;</span><span class="p">,</span>
+        <span class="mi">4066</span><span class="p">:</span> <span class="n">PREFIX</span> <span class="o">+</span> <span class="s2">&quot;G2_searchByAttributes_V2(</span><span class="si">{0}</span><span class="s2">, </span><span class="si">{1}</span><span class="s2">) failed. Return code: </span><span class="si">{2}</span><span class="s2">&quot;</span><span class="p">,</span>
+        <span class="mi">4067</span><span class="p">:</span> <span class="p">(</span>
+            <span class="n">PREFIX</span> <span class="o">+</span> <span class="s2">&quot;G2_searchByAttributes_V3(</span><span class="si">{0}</span><span class="s2">, </span><span class="si">{1}</span><span class="s2">, </span><span class="si">{2}</span><span class="s2">) failed. Return code: </span><span class="si">{3}</span><span class="s2">&quot;</span>
+        <span class="p">),</span>
+        <span class="mi">4068</span><span class="p">:</span> <span class="n">PREFIX</span> <span class="o">+</span> <span class="s2">&quot;G2_stats() failed. Return code: </span><span class="si">{0}</span><span class="s2">&quot;</span><span class="p">,</span>
+        <span class="mi">4069</span><span class="p">:</span> <span class="n">PREFIX</span> <span class="o">+</span> <span class="s2">&quot;G2_whyEntities(</span><span class="si">{0}</span><span class="s2">, </span><span class="si">{1}</span><span class="s2">) failed. Return code: </span><span class="si">{2}</span><span class="s2">&quot;</span><span class="p">,</span>
+        <span class="mi">4070</span><span class="p">:</span> <span class="n">PREFIX</span> <span class="o">+</span> <span class="s2">&quot;G2_whyEntities_V2(</span><span class="si">{0}</span><span class="s2">, </span><span class="si">{1}</span><span class="s2">, </span><span class="si">{2}</span><span class="s2">) failed. Return code: </span><span class="si">{3}</span><span class="s2">&quot;</span><span class="p">,</span>
+        <span class="mi">4071</span><span class="p">:</span> <span class="n">PREFIX</span> <span class="o">+</span> <span class="s2">&quot;G2_whyEntityByEntityID(</span><span class="si">{0}</span><span class="s2">) failed. Return code: </span><span class="si">{1}</span><span class="s2">&quot;</span><span class="p">,</span>
+        <span class="mi">4072</span><span class="p">:</span> <span class="n">PREFIX</span> <span class="o">+</span> <span class="s2">&quot;G2_whyEntityByEntityID_V2(</span><span class="si">{0}</span><span class="s2">, </span><span class="si">{1}</span><span class="s2">) failed. Return code: </span><span class="si">{2}</span><span class="s2">&quot;</span><span class="p">,</span>
+        <span class="mi">4073</span><span class="p">:</span> <span class="n">PREFIX</span> <span class="o">+</span> <span class="s2">&quot;G2_whyEntityByRecordID(</span><span class="si">{0}</span><span class="s2">, </span><span class="si">{1}</span><span class="s2">) failed. Return code: </span><span class="si">{2}</span><span class="s2">&quot;</span><span class="p">,</span>
+        <span class="mi">4074</span><span class="p">:</span> <span class="p">(</span>
+            <span class="n">PREFIX</span> <span class="o">+</span> <span class="s2">&quot;G2_whyEntityByRecordID_V2(</span><span class="si">{0}</span><span class="s2">, </span><span class="si">{1}</span><span class="s2">, </span><span class="si">{2}</span><span class="s2">) failed. Return code: </span><span class="si">{3}</span><span class="s2">&quot;</span>
+        <span class="p">),</span>
+        <span class="mi">4075</span><span class="p">:</span> <span class="n">PREFIX</span> <span class="o">+</span> <span class="s2">&quot;G2_whyRecords(</span><span class="si">{0}</span><span class="s2">, </span><span class="si">{1}</span><span class="s2">, </span><span class="si">{2}</span><span class="s2">, </span><span class="si">{3}</span><span class="s2">) failed. Return code: </span><span class="si">{4}</span><span class="s2">&quot;</span><span class="p">,</span>
+        <span class="mi">4076</span><span class="p">:</span> <span class="p">(</span>
+            <span class="n">PREFIX</span>
+            <span class="o">+</span> <span class="s2">&quot;G2_whyRecords_V2(</span><span class="si">{0}</span><span class="s2">, </span><span class="si">{1}</span><span class="s2">, </span><span class="si">{2}</span><span class="s2">, </span><span class="si">{3}</span><span class="s2">, </span><span class="si">{4}</span><span class="s2">) failed. Return code: </span><span class="si">{5}</span><span class="s2">&quot;</span>
+        <span class="p">),</span>
+        <span class="c1"># TODO why_record_in_entity</span>
+        <span class="c1"># TODO This text doesn&#39;t make sense without specifying there are 2 ways to init if keeping both</span>
+        <span class="mi">4077</span><span class="p">:</span> <span class="p">(</span>
+            <span class="n">PREFIX</span>
+            <span class="o">+</span> <span class="s2">&quot;G2Engine</span><span class="si">{0}</span><span class="s2">, </span><span class="si">{1}</span><span class="s2">) failed. module_name and ini_params must both be set or&quot;</span>
+            <span class="s2">&quot; both be empty&quot;</span>
+        <span class="p">),</span>
+    <span class="p">}</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot; :meta private: &quot;&quot;&quot;</span>
+
+    <span class="c1"># -------------------------------------------------------------------------</span>
+    <span class="c1"># Interface definition</span>
+    <span class="c1"># -------------------------------------------------------------------------</span>
+
+    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span> <span class="nf">add_record</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">data_source_code</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">record_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">record_definition</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="n">Any</span><span class="p">]],</span>
+        <span class="c1"># TODO When these flags are working is 0 correct for a default value of not returning with_info?</span>
+        <span class="n">flags</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
+        <span class="c1"># TODO Are args also needed? Is there a better way to do this?</span>
+        <span class="c1"># *args: Any,</span>
+        <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        The `add_record` method adds a record into the Senzing repository.</span>
+<span class="sd">        Can be called as many times as desired and from multiple threads at the same time.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            data_source_code (str): Identifies the provenance of the data.</span>
+<span class="sd">            record_id (str): The unique identifier within the records of the same data source.</span>
+<span class="sd">            record_definition (str | Dict): A JSON document containing the record to be added to the Senzing repository.</span>
+<span class="sd">            flags (int, optional): Flags used to control information returned. Defaults to 0.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            str: If flags are set to return the WITH_INFO response a JSON document containing the details, otherwise an empty JSON document.</span>
+
+<span class="sd">        Raises:</span>
+
+<span class="sd">        .. collapse:: Example:</span>
+
+<span class="sd">            .. literalinclude:: ../../examples/g2engine/add_record.py</span>
+<span class="sd">                :linenos:</span>
+<span class="sd">                :language: python</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+    <span class="c1"># TODO doc strings for all return_dict methods it _return_dict methods are staying?</span>
+    <span class="k">def</span> <span class="nf">add_record_return_dict</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">data_source_code</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">record_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">record_definition</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="n">Any</span><span class="p">]],</span>
+        <span class="n">flags</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+        <span class="c1"># TODO Document</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">cast</span><span class="p">(</span>
+            <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span>
+            <span class="c1"># TODO orjson?</span>
+            <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">add_record</span><span class="p">(</span><span class="n">data_source_code</span><span class="p">,</span> <span class="n">record_id</span><span class="p">,</span> <span class="n">record_definition</span><span class="p">,</span> <span class="n">flags</span><span class="p">)</span>
+            <span class="p">),</span>
+        <span class="p">)</span>
+
+    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span> <span class="nf">close_export</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">export_handle</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        The `close_export` method closes the exported document created by `export_json_entity_report`.</span>
+<span class="sd">        It is part of the `export_json_entity_report`, `fetch_next`, `close_export`</span>
+<span class="sd">        lifecycle of a list of sized entities.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            export_handle (int): A handle created by `export_json_entity_report` or `export_csv_entity_report`.</span>
+
+<span class="sd">        Raises:</span>
+
+<span class="sd">        .. collapse:: Example:</span>
+
+<span class="sd">            .. literalinclude:: ../../examples/g2engine/export_json_fetch_close.py</span>
+<span class="sd">                :linenos:</span>
+<span class="sd">                :language: python</span>
+
+<span class="sd">            **Output:**</span>
+
+<span class="sd">            .. literalinclude:: ../../examples/g2engine/export_json_fetch_close.txt</span>
+<span class="sd">                :linenos:</span>
+<span class="sd">                :language: json</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span> <span class="nf">count_redo_records</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        The `count_redo_records` method returns the number of records in need of redo-ing.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            int: The number of redo records in Senzing&#39;s redo queue.</span>
+
+<span class="sd">        Raises:</span>
+
+<span class="sd">        .. collapse:: Example:</span>
+
+<span class="sd">            .. literalinclude:: ../../examples/g2engine/count_redo_records.py</span>
+<span class="sd">                :linenos:</span>
+<span class="sd">                :language: python</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span> <span class="nf">delete_record</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">data_source_code</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">record_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">flags</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        The `delete_record` method deletes a record from the Senzing repository.</span>
+<span class="sd">        Can be called as many times as desired and from multiple threads at the same time.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            data_source_code (str): Identifies the provenance of the data.</span>
+<span class="sd">            record_id (str): The unique identifier within the records of the same data source.</span>
+<span class="sd">            load_id (str, optional): An identifier used to distinguish different load batches/sessions. An empty string is acceptable. Defaults to &quot;&quot;.</span>
+<span class="sd">            flags (int, optional): Flags used to control information returned. Defaults to 0.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            str: If flags are set to return the WITH_INFO response a JSON document containing the details, otherwise an empty JSON document.</span>
+
+<span class="sd">        Raises:</span>
+
+<span class="sd">        .. collapse:: Example:</span>
+
+<span class="sd">            .. literalinclude:: ../../examples/g2engine/delete_record.py</span>
+<span class="sd">                :linenos:</span>
+<span class="sd">                :language: python</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">delete_record_return_dict</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">data_source_code</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">record_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">flags</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+        <span class="k">return</span> <span class="n">cast</span><span class="p">(</span>
+            <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span>
+            <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">delete_record</span><span class="p">(</span><span class="n">data_source_code</span><span class="p">,</span> <span class="n">record_id</span><span class="p">,</span> <span class="n">flags</span><span class="p">)),</span>
+        <span class="p">)</span>
+
+    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span> <span class="nf">destroy</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        The `destroy` method releases resources and performs cleanup for the G2Engine object and any in-memory configurations.</span>
+<span class="sd">        It should be called after all other calls are complete.</span>
+
+<span class="sd">        **Note:** If the `G2Engine` constructor was called with parameters,</span>
+<span class="sd">        the destructor will automatically call the destroy() method.</span>
+<span class="sd">        In this case, a separate call to `destroy()` is not needed.</span>
+
+<span class="sd">        Example:</span>
+
+<span class="sd">        .. code-block:: python</span>
+
+<span class="sd">            g2_engine = g2engine.G2Engine(module_name, ini_params)</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">            g2exception.G2Exception:</span>
+
+<span class="sd">        .. collapse:: Example:</span>
+
+<span class="sd">            .. literalinclude:: ../../examples/g2engine/g2engine_init_and_destroy.py</span>
+<span class="sd">                :linenos:</span>
+<span class="sd">                :language: python</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span> <span class="nf">export_csv_entity_report</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">csv_column_list</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">flags</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">G2EngineFlags</span><span class="o">.</span><span class="n">G2_EXPORT_DEFAULT_FLAGS</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+        <span class="c1"># TODO Add into docstring a good default csv_column_list example</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        **Warning:** `export_csv_entity_report` is not recommended for large systems as it does not scale.</span>
+<span class="sd">        It is recommended larger systems implement real-time replication to a data warehouse.</span>
+
+<span class="sd">        The `export_csv_entity_report` method initializes a cursor over a document of exported entities.</span>
+<span class="sd">        It is part of the `export_csv_entity_report`, `fetch_next`, `close_export`</span>
+<span class="sd">        lifecycle of a list of entities to export.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            csv_column_list (str): A comma-separated list of column names for the CSV export.</span>
+<span class="sd">            flags (int, optional): Flags used to control information returned. Defaults to G2EngineFlags.G2_EXPORT_DEFAULT_FLAGS.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            int: A handle that identifies the document to be scrolled through using `fetch_next`.</span>
+
+<span class="sd">        Raises:</span>
+
+<span class="sd">        .. collapse:: Example:</span>
+
+<span class="sd">            .. literalinclude:: ../../examples/g2engine/export_csv_fetch_close.py</span>
+<span class="sd">                :linenos:</span>
+<span class="sd">                :language: python</span>
+
+<span class="sd">            **Output:**</span>
+
+<span class="sd">            .. literalinclude:: ../../examples/g2engine/export_csv_fetch_close.txt</span>
+<span class="sd">                :linenos:</span>
+<span class="sd">                :language: json</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span> <span class="nf">export_json_entity_report</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">flags</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">G2EngineFlags</span><span class="o">.</span><span class="n">G2_EXPORT_DEFAULT_FLAGS</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        **Warning:** `export_json_entity_report` is not recommended for large systems as it does not scale.</span>
+<span class="sd">        It is recommended larger systems implement real-time replication to a data warehouse.</span>
+
+<span class="sd">        The `export_json_entity_report` method initializes a cursor over a document of exported entities.</span>
+<span class="sd">        It is part of the `export_json_entity_report`, `fetch_next`, `close_export`</span>
+<span class="sd">        lifecycle of a list of entities to export.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            flags (int, optional): Flags used to control information returned. Defaults to G2EngineFlags.G2_EXPORT_DEFAULT_FLAGS.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            int: A handle that identifies the document to be scrolled through using `fetch_next`.</span>
+
+<span class="sd">        Raises:</span>
+
+<span class="sd">        .. collapse:: Example:</span>
+
+<span class="sd">            .. literalinclude:: ../../examples/g2engine/export_json_fetch_close.py</span>
+<span class="sd">                :linenos:</span>
+<span class="sd">                :language: python</span>
+
+<span class="sd">            **Output:**</span>
+
+<span class="sd">            .. literalinclude:: ../../examples/g2engine/export_json_fetch_close.txt</span>
+<span class="sd">                :linenos:</span>
+<span class="sd">                :language: json</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span> <span class="nf">fetch_next</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">export_handle</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        The `fetch_next` method is used to scroll through an exported document one entity at a time.</span>
+<span class="sd">        Successive calls of `fetch_next` will export successive rows of entity data until there is no more.</span>
+<span class="sd">        It is part of the `export_json_entity_report` or `export_json_entity_report`, `fetch_next`, `close_export`</span>
+<span class="sd">        lifecycle of a list of exported entities.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            response_handle (int): A handle created by `export_json_entity_report` or `export_json_entity_report`.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            str: TODO:</span>
+
+<span class="sd">        Raises:</span>
+
+<span class="sd">        .. collapse:: Example:</span>
+
+<span class="sd">            .. literalinclude:: ../../examples/g2engine/export_json_fetch_close.py</span>
+<span class="sd">                :linenos:</span>
+<span class="sd">                :language: python</span>
+
+<span class="sd">            **Output:**</span>
+
+<span class="sd">            .. literalinclude:: ../../examples/g2engine/export_json_fetch_close.txt</span>
+<span class="sd">                :linenos:</span>
+<span class="sd">                :language: json</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+    <span class="c1"># NOTE Commented out, in C API but not other language SDKs, discuss if keep in or not</span>
+    <span class="c1"># @abstractmethod</span>
+    <span class="c1"># def find_interesting_entities_by_entity_id(</span>
+    <span class="c1">#     self, entity_id: int, flags: int = 0, **kwargs: Any</span>
+    <span class="c1"># ) -&gt; str:</span>
+    <span class="c1">#     &quot;&quot;&quot;The `find_interesting_entities_by_entity_id` method... TODO:</span>
+
+    <span class="c1">#     Args:</span>
+    <span class="c1">#         entity_id (int): The unique identifier of an entity.</span>
+    <span class="c1">#         flags (int, optional): Flags used to control information returned. Defaults to 0.</span>
+
+    <span class="c1">#     Returns:</span>
+    <span class="c1">#         str: A JSON document.</span>
+
+    <span class="c1">#     Raises:</span>
+
+    <span class="c1">#     .. collapse:: Example:</span>
+
+    <span class="c1">#         .. literalinclude:: ../../examples/g2engine/find_interesting_entities_by_entity_id.py</span>
+    <span class="c1">#             :linenos:</span>
+    <span class="c1">#             :language: python</span>
+
+    <span class="c1">#         **Output:**</span>
+
+    <span class="c1">#         .. literalinclude:: ../../examples/g2engine/find_interesting_entities_by_entity_id.txt</span>
+    <span class="c1">#             :linenos:</span>
+    <span class="c1">#             :language: json</span>
+    <span class="c1">#     &quot;&quot;&quot;</span>
+
+    <span class="c1"># def find_interesting_entities_by_entity_id_return_dict(</span>
+    <span class="c1">#     self, entity_id: int, flags: int = 0, **kwargs: Any</span>
+    <span class="c1"># ) -&gt; Dict[str, Any]:</span>
+    <span class="c1">#     &quot;&quot;&quot;TODO: document&quot;&quot;&quot;</span>
+    <span class="c1">#     return cast(</span>
+    <span class="c1">#         Dict[str, Any],</span>
+    <span class="c1">#         json.loads(self.find_interesting_entities_by_entity_id(entity_id, flags)),</span>
+    <span class="c1">#     )</span>
+    <span class="c1">#     &quot;&quot;&quot; &quot;&quot;&quot;</span>
+
+    <span class="c1"># @abstractmethod</span>
+    <span class="c1"># def find_interesting_entities_by_record_id(</span>
+    <span class="c1">#     self, data_source_code: str, record_id: str, flags: int = 0, **kwargs: Any</span>
+    <span class="c1"># ) -&gt; str:</span>
+    <span class="c1">#     &quot;&quot;&quot;</span>
+    <span class="c1">#     The `find_interesting_entities_by_record_id` method... TODO:</span>
+
+    <span class="c1">#     Args:</span>
+    <span class="c1">#         data_source_code (str): Identifies the provenance of the data.</span>
+    <span class="c1">#         record_id (str): The unique identifier within the records of the same data source.</span>
+    <span class="c1">#         flags (int, optional): Flags used to control information returned. Defaults to 0.</span>
+
+    <span class="c1">#     Returns:</span>
+    <span class="c1">#         str: A JSON document.</span>
+
+    <span class="c1">#     Raises:</span>
+
+    <span class="c1">#     .. collapse:: Example:</span>
+
+    <span class="c1">#         .. literalinclude:: ../../examples/g2engine/find_interesting_entities_by_record_id.py</span>
+    <span class="c1">#             :linenos:</span>
+    <span class="c1">#             :language: python</span>
+
+    <span class="c1">#         **Output:**</span>
+
+    <span class="c1">#         .. literalinclude:: ../../examples/g2engine/find_interesting_entities_by_record_id.txt</span>
+    <span class="c1">#             :linenos:</span>
+    <span class="c1">#             :language: json</span>
+    <span class="c1">#     &quot;&quot;&quot;</span>
+
+    <span class="c1"># def find_interesting_entities_by_record_id_return_dict(</span>
+    <span class="c1">#     self, data_source_code: str, record_id: str, flags: int = 0, **kwargs: Any</span>
+    <span class="c1"># ) -&gt; Dict[str, Any]:</span>
+    <span class="c1">#     &quot;&quot;&quot;TODO: document&quot;&quot;&quot;</span>
+    <span class="c1">#     return cast(</span>
+    <span class="c1">#         Dict[str, Any],</span>
+    <span class="c1">#         json.loads(</span>
+    <span class="c1">#             self.find_interesting_entities_by_record_id(</span>
+    <span class="c1">#                 data_source_code, record_id, flags</span>
+    <span class="c1">#             )</span>
+    <span class="c1">#         ),</span>
+    <span class="c1">#     )</span>
+
+    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span> <span class="nf">find_network_by_entity_id</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="c1"># TODO Improve upon Any, Any?</span>
+        <span class="c1"># TODO Should this and similar functions take a list of entity IDs instead of the JSON?</span>
+        <span class="n">entity_list</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="n">Any</span><span class="p">]],</span>
+        <span class="n">max_degrees</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">build_out_degree</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">max_entities</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">flags</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">G2EngineFlags</span><span class="o">.</span><span class="n">G2_FIND_PATH_DEFAULT_FLAGS</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        The `find_network_by_entity_id` method finds all entities surrounding a requested set of entities.</span>
+<span class="sd">        This includes the requested entities, paths between them, and relations to other nearby entities.</span>
+<span class="sd">        Returns a JSON document that identifies the path between the each set of search entities (if the path exists),</span>
+<span class="sd">        and the information for the entities in the path.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            entity_list (str): A JSON document listing entities.</span>
+<span class="sd">            max_degrees (int): The maximum number of degrees in paths between search entities.</span>
+<span class="sd">            build_out_degree (int): The number of degrees of relationships to show around each search entity.</span>
+<span class="sd">            max_entities (int): The maximum number of entities to return in the discovered network.</span>
+<span class="sd">            flags (int, optional): The maximum number of entities to return in the discovered network. Defaults to G2EngineFlags.G2_FIND_PATH_DEFAULT_FLAGS.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            str: A JSON document.</span>
+
+<span class="sd">        Raises:</span>
+
+<span class="sd">        .. collapse:: Example:</span>
+
+<span class="sd">            .. literalinclude:: ../../examples/g2engine/find_network_by_entity_id.py</span>
+<span class="sd">                :linenos:</span>
+<span class="sd">                :language: python</span>
+
+<span class="sd">            **Output:**</span>
+
+<span class="sd">            .. literalinclude:: ../../examples/g2engine/find_network_by_entity_id.txt</span>
+<span class="sd">                :linenos:</span>
+<span class="sd">                :language: json</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">find_network_by_entity_id_return_dict</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">entity_list</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="n">Any</span><span class="p">]],</span>
+        <span class="n">max_degrees</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">build_out_degree</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">max_entities</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">flags</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">G2EngineFlags</span><span class="o">.</span><span class="n">G2_FIND_PATH_DEFAULT_FLAGS</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;TODO: document&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">cast</span><span class="p">(</span>
+            <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span>
+            <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">find_network_by_entity_id</span><span class="p">(</span>
+                    <span class="n">entity_list</span><span class="p">,</span> <span class="n">max_degrees</span><span class="p">,</span> <span class="n">build_out_degree</span><span class="p">,</span> <span class="n">max_entities</span><span class="p">,</span> <span class="n">flags</span>
+                <span class="p">)</span>
+            <span class="p">),</span>
+        <span class="p">)</span>
+
+    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span> <span class="nf">find_network_by_record_id</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">record_list</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="n">Any</span><span class="p">]],</span>
+        <span class="n">max_degrees</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">build_out_degree</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">max_entities</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">flags</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">G2EngineFlags</span><span class="o">.</span><span class="n">G2_FIND_PATH_DEFAULT_FLAGS</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        The `find_network_by_record_id` method finds all entities surrounding a requested set of entities by their RECORD_ID values.</span>
+<span class="sd">        This includes the requested entities, paths between them, and relations to other nearby entities.</span>
+<span class="sd">        Returns a JSON document that identifies the path between the each set of search entities (if the path exists),</span>
+<span class="sd">        and the information for the entities in the path.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            record_list (str): A JSON document listing records.</span>
+<span class="sd">            max_degrees (int): The maximum number of degrees in paths between search entities.</span>
+<span class="sd">            build_out_degree (int): The number of degrees of relationships to show around each search entity.</span>
+<span class="sd">            max_entities (int): The maximum number of entities to return in the discovered network.</span>
+<span class="sd">            flags (int, optional): Flags used to control information returned. Defaults to G2EngineFlags.G2_FIND_PATH_DEFAULT_FLAGS.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            str: A JSON document.</span>
+
+<span class="sd">        Raises:</span>
+
+<span class="sd">        .. collapse:: Example:</span>
+
+<span class="sd">            .. literalinclude:: ../../examples/g2engine/find_network_by_record_id.py</span>
+<span class="sd">                :linenos:</span>
+<span class="sd">                :language: python</span>
+
+<span class="sd">            **Output:**</span>
+
+<span class="sd">            .. literalinclude:: ../../examples/g2engine/find_network_by_record_id.txt</span>
+<span class="sd">                :linenos:</span>
+<span class="sd">                :language: json</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">find_network_by_record_id_return_dict</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">record_list</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="n">Any</span><span class="p">]],</span>
+        <span class="n">max_degrees</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">build_out_degree</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">max_entities</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">flags</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">G2EngineFlags</span><span class="o">.</span><span class="n">G2_FIND_PATH_DEFAULT_FLAGS</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;TODO: document&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">cast</span><span class="p">(</span>
+            <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span>
+            <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">find_network_by_record_id</span><span class="p">(</span>
+                    <span class="n">record_list</span><span class="p">,</span> <span class="n">max_degrees</span><span class="p">,</span> <span class="n">build_out_degree</span><span class="p">,</span> <span class="n">max_entities</span><span class="p">,</span> <span class="n">flags</span>
+                <span class="p">)</span>
+            <span class="p">),</span>
+        <span class="p">)</span>
+
+    <span class="c1"># TODO find path calls are not currently working on V4 builds</span>
+    <span class="c1"># TODO GDEV-3774</span>
+    <span class="c1"># @abstractmethod</span>
+    <span class="c1"># def find_path_by_entity_id(</span>
+    <span class="c1">#     self,</span>
+    <span class="c1">#     start_entity_id: int,</span>
+    <span class="c1">#     end_entity_id: int,</span>
+    <span class="c1">#     max_degrees: int,</span>
+    <span class="c1">#     # TODO Should accept both entity and record IDs in V4, test</span>
+    <span class="c1">#     exclusions: Union[str, Dict[Any, Any]],</span>
+    <span class="c1">#     # TODO Take a list of data sources too?</span>
+    <span class="c1">#     required_data_sources: Union[str, Dict[Any, Any]],</span>
+    <span class="c1">#     flags: int = G2EngineFlags.G2_FIND_PATH_DEFAULT_FLAGS,</span>
+    <span class="c1">#     **kwargs: Any,</span>
+    <span class="c1"># ) -&gt; str:</span>
+    <span class="c1">#     &quot;&quot;&quot;</span>
+    <span class="c1">#     The `find_path_by_entity_id` method finds the most efficient relationship between two entities path based on the parameters</span>
+    <span class="c1">#     and returns a JSON document with an ENTITY_PATHS section that details the path between the entities.</span>
+    <span class="c1">#     The ENTITIES sections details information on the entities. Paths are found using known relationships with other entities.</span>
+    <span class="c1">#     Paths are found using known relationships with other entities.</span>
+
+    <span class="c1">#     Args:</span>
+    <span class="c1">#         start_entity_id (int): The entity ID for the starting entity of the search path.</span>
+    <span class="c1">#         end_entity_id (int): The entity ID for the ending entity of the search path.</span>
+    <span class="c1">#         max_degrees (int): The maximum number of degrees in paths between search entities.</span>
+    <span class="c1">#         exclusions (str): TODO</span>
+    <span class="c1">#         required_data_sources (str): TODO</span>
+    <span class="c1">#         flags (int, optional): Flags used to control information returned. Defaults to G2EngineFlags.G2_FIND_PATH_DEFAULT_FLAGS.</span>
+
+    <span class="c1">#     Returns:</span>
+    <span class="c1">#         str: A JSON document with an ENTITY_PATHS section that details the path between the entities.</span>
+
+    <span class="c1">#     Raises:</span>
+
+    <span class="c1">#     .. collapse:: Example:</span>
+
+    <span class="c1">#         .. literalinclude:: ../../examples/g2engine/find_path_by_entity_id.py</span>
+    <span class="c1">#             :linenos:</span>
+    <span class="c1">#             :language: python</span>
+
+    <span class="c1">#         **Output:**</span>
+
+    <span class="c1">#         .. literalinclude:: ../../examples/g2engine/find_path_by_entity_id.txt</span>
+    <span class="c1">#             :linenos:</span>
+    <span class="c1">#             :language: json</span>
+    <span class="c1">#     &quot;&quot;&quot;</span>
+
+    <span class="c1"># def find_path_by_entity_id_return_dict(</span>
+    <span class="c1">#     self,</span>
+    <span class="c1">#     start_entity_id: int,</span>
+    <span class="c1">#     end_entity_id: int,</span>
+    <span class="c1">#     max_degrees: int,</span>
+    <span class="c1">#     exclusions: Union[str, Dict[Any, Any]],</span>
+    <span class="c1">#     required_data_sources: Union[str, Dict[Any, Any]],</span>
+    <span class="c1">#     flags: int = G2EngineFlags.G2_FIND_PATH_DEFAULT_FLAGS,</span>
+    <span class="c1">#     **kwargs: Any,</span>
+    <span class="c1"># ) -&gt; Dict[str, Any]:</span>
+    <span class="c1">#     &quot;&quot;&quot;TODO: document&quot;&quot;&quot;</span>
+    <span class="c1">#     return cast(</span>
+    <span class="c1">#         Dict[str, Any],</span>
+    <span class="c1">#         json.loads(</span>
+    <span class="c1">#             self.find_path_by_entity_id(</span>
+    <span class="c1">#                 start_entity_id,</span>
+    <span class="c1">#                 end_entity_id,</span>
+    <span class="c1">#                 max_degrees,</span>
+    <span class="c1">#                 exclusions,</span>
+    <span class="c1">#                 required_data_sources,</span>
+    <span class="c1">#                 flags,</span>
+    <span class="c1">#             )</span>
+    <span class="c1">#         ),</span>
+    <span class="c1">#     )</span>
+
+    <span class="c1"># @abstractmethod</span>
+    <span class="c1"># def find_path_by_record_id(</span>
+    <span class="c1">#     self,</span>
+    <span class="c1">#     start_data_source_code: str,</span>
+    <span class="c1">#     start_record_id: str,</span>
+    <span class="c1">#     end_data_source_code: str,</span>
+    <span class="c1">#     end_record_id: str,</span>
+    <span class="c1">#     max_degrees: int,</span>
+    <span class="c1">#     exclusions: Union[str, Dict[Any, Any]],</span>
+    <span class="c1">#     required_data_sources: Union[str, Dict[Any, Any]],</span>
+    <span class="c1">#     flags: int = G2EngineFlags.G2_FIND_PATH_DEFAULT_FLAGS,</span>
+    <span class="c1">#     **kwargs: Any,</span>
+    <span class="c1"># ) -&gt; str:</span>
+    <span class="c1">#     &quot;&quot;&quot;</span>
+    <span class="c1">#     The `find_path_by_record_id` method finds the most efficient relationship between</span>
+    <span class="c1">#     two entities path based on the parameters by RECORD_ID values</span>
+    <span class="c1">#     and returns a JSON document with an ENTITY_PATHS section that details the path between the entities.</span>
+    <span class="c1">#     The ENTITIES sections details information on the entities.</span>
+    <span class="c1">#     Paths are found using known relationships with other entities.</span>
+    <span class="c1">#     The entities are identified by starting and ending records.</span>
+
+    <span class="c1">#     Args:</span>
+    <span class="c1">#         start_data_source_code (str): Identifies the provenance of the record for the starting entity of the search path.</span>
+    <span class="c1">#         start_record_id (str): The unique identifier within the records of the same data source for the starting entity of the search path.</span>
+    <span class="c1">#         end_data_source_code (str): Identifies the provenance of the record for the ending entity of the search path.</span>
+    <span class="c1">#         end_record_id (str): The unique identifier within the records of the same data source for the ending entity of the search path.</span>
+    <span class="c1">#         max_degrees (int): The maximum number of degrees in paths between search entities.</span>
+    <span class="c1">#         exclusions (str): TODO</span>
+    <span class="c1">#         required_data_sources (str): TODO</span>
+    <span class="c1">#         flags (int, optional): Flags used to control information returned. Defaults to G2EngineFlags.G2_FIND_PATH_DEFAULT_FLAGS.</span>
+
+    <span class="c1">#     Returns:</span>
+    <span class="c1">#         str: A JSON document.</span>
+
+    <span class="c1">#     Raises:</span>
+
+    <span class="c1">#     .. collapse:: Example:</span>
+
+    <span class="c1">#         .. literalinclude:: ../../examples/g2engine/find_path_by_record_id.py</span>
+    <span class="c1">#             :linenos:</span>
+    <span class="c1">#             :language: python</span>
+
+    <span class="c1">#         **Output:**</span>
+
+    <span class="c1">#         .. literalinclude:: ../../examples/g2engine/find_path_by_record_id.txt</span>
+    <span class="c1">#             :linenos:</span>
+    <span class="c1">#             :language: json</span>
+    <span class="c1">#     &quot;&quot;&quot;</span>
+
+    <span class="c1"># def find_path_by_record_id_return_dict(</span>
+    <span class="c1">#     self,</span>
+    <span class="c1">#     start_data_source_code: str,</span>
+    <span class="c1">#     start_record_id: str,</span>
+    <span class="c1">#     end_data_source_code: str,</span>
+    <span class="c1">#     end_record_id: str,</span>
+    <span class="c1">#     max_degrees: int,</span>
+    <span class="c1">#     exclusions: Union[str, Dict[Any, Any]],</span>
+    <span class="c1">#     required_data_sources: Union[str, Dict[Any, Any]],</span>
+    <span class="c1">#     flags: int = G2EngineFlags.G2_FIND_PATH_DEFAULT_FLAGS,</span>
+    <span class="c1">#     **kwargs: Any,</span>
+    <span class="c1"># ) -&gt; Dict[str, Any]:</span>
+    <span class="c1">#     &quot;&quot;&quot;TODO: document&quot;&quot;&quot;</span>
+    <span class="c1">#     return cast(</span>
+    <span class="c1">#         Dict[str, Any],</span>
+    <span class="c1">#         json.loads(</span>
+    <span class="c1">#             self.find_path_by_record_id(</span>
+    <span class="c1">#                 start_data_source_code,</span>
+    <span class="c1">#                 start_record_id,</span>
+    <span class="c1">#                 end_data_source_code,</span>
+    <span class="c1">#                 end_record_id,</span>
+    <span class="c1">#                 max_degrees,</span>
+    <span class="c1">#                 exclusions,</span>
+    <span class="c1">#                 required_data_sources,</span>
+    <span class="c1">#                 flags,</span>
+    <span class="c1">#             )</span>
+    <span class="c1">#         ),</span>
+    <span class="c1">#     )</span>
+
+    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span> <span class="nf">get_active_config_id</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        The `get_active_config_id` method returns the identifier of the currently active Senzing engine configuration.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            int: The identifier of the active Senzing Engine configuration.</span>
+
+<span class="sd">        Raises:</span>
+
+<span class="sd">        .. collapse:: Example:</span>
+
+<span class="sd">            .. literalinclude:: ../../examples/g2engine/get_active_config_id.py</span>
+<span class="sd">                :linenos:</span>
+<span class="sd">                :language: python</span>
+
+<span class="sd">            **Output:**</span>
+
+<span class="sd">            .. literalinclude:: ../../examples/g2engine/get_active_config_id.txt</span>
+<span class="sd">                :linenos:</span>
+<span class="sd">                :language: json</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span> <span class="nf">get_entity_by_entity_id</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">entity_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">flags</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">G2EngineFlags</span><span class="o">.</span><span class="n">G2_ENTITY_DEFAULT_FLAGS</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        The `get_entity_by_entity_id` method returns entity data based on the ID of a resolved identity.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            entity_id (int): The unique identifier of an entity.</span>
+<span class="sd">            flags (int, optional): Flags used to control information returned. Defaults to G2EngineFlags.G2_ENTITY_DEFAULT_FLAGS.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            str: A JSON document.</span>
+
+<span class="sd">        Raises:</span>
+
+<span class="sd">        .. collapse:: Example:</span>
+
+<span class="sd">            .. literalinclude:: ../../examples/g2engine/get_entity_by_entity_id.py</span>
+<span class="sd">                :linenos:</span>
+<span class="sd">                :language: python</span>
+
+<span class="sd">            **Output:**</span>
+
+<span class="sd">            .. literalinclude:: ../../examples/g2engine/get_entity_by_entity_id.txt</span>
+<span class="sd">                :linenos:</span>
+<span class="sd">                :language: json</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">get_entity_by_entity_id_return_dict</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">entity_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">flags</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">G2EngineFlags</span><span class="o">.</span><span class="n">G2_ENTITY_DEFAULT_FLAGS</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+        <span class="c1"># TODO: Document</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">cast</span><span class="p">(</span>
+            <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span>
+            <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_entity_by_entity_id</span><span class="p">(</span><span class="n">entity_id</span><span class="p">,</span> <span class="n">flags</span><span class="p">)),</span>
+        <span class="p">)</span>
+
+    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span> <span class="nf">get_entity_by_record_id</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">data_source_code</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">record_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">flags</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">G2EngineFlags</span><span class="o">.</span><span class="n">G2_ENTITY_DEFAULT_FLAGS</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        The `get_entity_by_record_id` method returns entity data based on the ID of a record which is a member of the entity.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            data_source_code (str): Identifies the provenance of the data.</span>
+<span class="sd">            record_id (str): The unique identifier within the records of the same data source.</span>
+<span class="sd">            flags (int, optional): Flags used to control information returned. Defaults to G2EngineFlags.G2_ENTITY_DEFAULT_FLAGS.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            str: A JSON document.</span>
+
+<span class="sd">        Raises:</span>
+
+<span class="sd">        .. collapse:: Example:</span>
+
+<span class="sd">            .. literalinclude:: ../../examples/g2engine/get_entity_by_record_id.py</span>
+<span class="sd">                :linenos:</span>
+<span class="sd">                :language: python</span>
+
+<span class="sd">            **Output:**</span>
+
+<span class="sd">            .. literalinclude:: ../../examples/g2engine/get_entity_by_record_id.txt</span>
+<span class="sd">                :linenos:</span>
+<span class="sd">                :language: json</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">get_entity_by_record_id_return_dict</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">data_source_code</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">record_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">flags</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">G2EngineFlags</span><span class="o">.</span><span class="n">G2_ENTITY_DEFAULT_FLAGS</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+        <span class="c1"># TODO: Document</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">cast</span><span class="p">(</span>
+            <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span>
+            <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">get_entity_by_record_id</span><span class="p">(</span><span class="n">data_source_code</span><span class="p">,</span> <span class="n">record_id</span><span class="p">,</span> <span class="n">flags</span><span class="p">)</span>
+            <span class="p">),</span>
+        <span class="p">)</span>
+
+    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span> <span class="nf">get_stats</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        The `get_stats` method retrieves workload statistics for the current process.</span>
+<span class="sd">        These statistics will automatically reset after retrieval.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            str:  A JSON document.</span>
+
+<span class="sd">        Raises:</span>
+
+<span class="sd">        .. collapse:: Example:</span>
+
+<span class="sd">            .. literalinclude:: ../../examples/g2engine/stats.py</span>
+<span class="sd">                :linenos:</span>
+<span class="sd">                :language: python</span>
+
+<span class="sd">            **Output:**</span>
+
+<span class="sd">            .. literalinclude:: ../../examples/g2engine/stats.txt</span>
+<span class="sd">                :linenos:</span>
+<span class="sd">                :language: json</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">get_stats_return_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;TODO: document&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">cast</span><span class="p">(</span>
+            <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span>
+            <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_stats</span><span class="p">()),</span>
+        <span class="p">)</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; &quot;&quot;&quot;</span>
+
+    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span> <span class="nf">get_record</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">data_source_code</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">record_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">flags</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">G2EngineFlags</span><span class="o">.</span><span class="n">G2_RECORD_DEFAULT_FLAGS</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        The `get_record` method returns a JSON document of a single record from the Senzing repository.</span>
+<span class="sd">        Can be called as many times as desired and from multiple threads at the same time.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            data_source_code (str): Identifies the provenance of the data.</span>
+<span class="sd">            record_id (str): The unique identifier within the records of the same data source.</span>
+<span class="sd">            flags (int, optional): Flags used to control information returned. Defaults to G2EngineFlags.G2_RECORD_DEFAULT_FLAGS.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            str: A JSON document of a single record.</span>
+
+<span class="sd">        Raises:</span>
+
+<span class="sd">        .. collapse:: Example:</span>
+
+<span class="sd">            .. literalinclude:: ../../examples/g2engine/get_record.py</span>
+<span class="sd">                :linenos:</span>
+<span class="sd">                :language: python</span>
+
+<span class="sd">            **Output:**</span>
+
+<span class="sd">            .. literalinclude:: ../../examples/g2engine/get_record.txt</span>
+<span class="sd">                :linenos:</span>
+<span class="sd">                :language: json</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">get_record_return_dict</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">data_source_code</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">record_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">flags</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">G2EngineFlags</span><span class="o">.</span><span class="n">G2_RECORD_DEFAULT_FLAGS</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+        <span class="c1"># TODO: Document</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">cast</span><span class="p">(</span>
+            <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span>
+            <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_record</span><span class="p">(</span><span class="n">data_source_code</span><span class="p">,</span> <span class="n">record_id</span><span class="p">,</span> <span class="n">flags</span><span class="p">)),</span>
+        <span class="p">)</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; &quot;&quot;&quot;</span>
+
+    <span class="c1"># TODO make a return_dict method? If you get as a dict and send to processRedoRecord it then has to be converted from dict to str again - pointless</span>
+    <span class="c1"># TODO take into consideration those pesky REPAIR_ENTITY records! Do they still exist in V4?</span>
+    <span class="c1"># TODO {&#39;UMF_PROC&#39;: {&#39;NAME&#39;: &#39;REPAIR_ENTITY&#39;, &#39;PARAMS&#39;: [{&#39;PARAM&#39;: {&#39;NAME&#39;: &#39;ENTITY_ID&#39;, &#39;VALUE&#39;: &#39;21898660&#39;}}]}}</span>
+    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span> <span class="nf">get_redo_record</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        The `get_redo_record` method returns the next internally queued redo record from the Senzing repository.</span>
+<span class="sd">        Usually, the `process_redo_record` or `process_redo_record_with_info` method is called to process the redo record</span>
+<span class="sd">        retrieved by `get_redo_record`.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            str: A JSON document.</span>
+
+<span class="sd">        Raises:</span>
+
+<span class="sd">        .. collapse:: Example:</span>
+
+<span class="sd">            .. literalinclude:: ../../examples/g2engine/get_redo_record.py</span>
+<span class="sd">                :linenos:</span>
+<span class="sd">                :language: python</span>
+
+<span class="sd">            **Output:**</span>
+
+<span class="sd">            .. literalinclude:: ../../examples/g2engine/get_redo_record.txt</span>
+<span class="sd">                :linenos:</span>
+<span class="sd">                :language: json</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span> <span class="nf">get_repository_last_modified_time</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        The `get_repository_last_modified_time` method retrieves the last modified time of the Senzing repository,</span>
+<span class="sd">        measured in the number of seconds between the last modified time and January 1, 1970 12:00am GMT (epoch time).</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            int: A Unix Timestamp.</span>
+
+<span class="sd">        Raises:</span>
+
+<span class="sd">        .. collapse:: Example:</span>
+
+<span class="sd">            .. literalinclude:: ../../examples/g2engine/get_repository_last_modified_time.py</span>
+<span class="sd">                :linenos:</span>
+<span class="sd">                :language: python</span>
+
+<span class="sd">            **Output:**</span>
+
+<span class="sd">            .. literalinclude:: ../../examples/g2engine/get_repository_last_modified_time.txt</span>
+<span class="sd">                :linenos:</span>
+<span class="sd">                :language: json</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span> <span class="nf">get_virtual_entity_by_record_id</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">record_list</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="n">Any</span><span class="p">]],</span>
+        <span class="n">flags</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">G2EngineFlags</span><span class="o">.</span><span class="n">G2_HOW_ENTITY_DEFAULT_FLAGS</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        The `get_virtual_entity_by_record_id` method creates a view of a virtual entity</span>
+<span class="sd">        using a list of existing loaded records.</span>
+<span class="sd">        The virtual entity is composed of only those records and their features.</span>
+<span class="sd">        Entity resolution is not performed.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            record_list (str): A JSON document of one or more records by DATA_SOURCE and RECORD_ID pairs, formatted as `{&quot;RECORDS&quot;:[{&quot;DATA_SOURCE&quot;:&quot;DS1&quot;,&quot;RECORD_ID&quot;:&quot;R1&quot;},{&quot;DATA_SOURCE&quot;:&quot;DS2&quot;,&quot;RECORD_ID&quot;:&quot;R2&quot;}]}`.</span>
+<span class="sd">            flags (int, optional): Flags used to control information returned. Defaults to G2EngineFlags.G2_HOW_ENTITY_DEFAULT_FLAGS.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            str:  A JSON document.</span>
+
+<span class="sd">        Raises:</span>
+
+<span class="sd">        .. collapse:: Example:</span>
+
+<span class="sd">            .. literalinclude:: ../../examples/g2engine/get_virtual_entity_by_record_id.py</span>
+<span class="sd">                :linenos:</span>
+<span class="sd">                :language: python</span>
+
+<span class="sd">            **Output:**</span>
+
+<span class="sd">            .. literalinclude:: ../../examples/g2engine/get_virtual_entity_by_record_id.txt</span>
+<span class="sd">                :linenos:</span>
+<span class="sd">                :language: json</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">get_virtual_entity_by_record_id_return_dict</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">record_list</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="n">Any</span><span class="p">]],</span>
+        <span class="n">flags</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">G2EngineFlags</span><span class="o">.</span><span class="n">G2_HOW_ENTITY_DEFAULT_FLAGS</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+        <span class="c1"># TODO: Document</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">cast</span><span class="p">(</span>
+            <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span>
+            <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_virtual_entity_by_record_id</span><span class="p">(</span><span class="n">record_list</span><span class="p">,</span> <span class="n">flags</span><span class="p">)),</span>
+        <span class="p">)</span>
+
+    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span> <span class="nf">how_entity_by_entity_id</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">entity_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">flags</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">G2EngineFlags</span><span class="o">.</span><span class="n">G2_HOW_ENTITY_DEFAULT_FLAGS</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        TODO: The `how_entity_by_entity_id` method determines and details steps-by-step *how* records resolved to an ENTITY_ID.</span>
+
+<span class="sd">        In most cases, *how* provides more detailed information than *why* as the resolution is detailed step-by-step.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            entity_id (int): The unique identifier of an entity.</span>
+<span class="sd">            flags (int, optional): Flags used to control information returned. Defaults to G2EngineFlags.G2_HOW_ENTITY_DEFAULT_FLAGS.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            str: A JSON document.</span>
+
+<span class="sd">        Raises:</span>
+
+<span class="sd">        .. collapse:: Example:</span>
+
+<span class="sd">            .. literalinclude:: ../../examples/g2engine/how_entity_by_entity_id.py</span>
+<span class="sd">                :linenos:</span>
+<span class="sd">                :language: python</span>
+
+<span class="sd">            **Output:**</span>
+
+<span class="sd">            .. literalinclude:: ../../examples/g2engine/how_entity_by_entity_id.txt</span>
+<span class="sd">                :linenos:</span>
+<span class="sd">                :language: json</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">how_entity_by_entity_id_return_dict</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">entity_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">flags</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">G2EngineFlags</span><span class="o">.</span><span class="n">G2_HOW_ENTITY_DEFAULT_FLAGS</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+        <span class="c1"># TODO: Document</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">cast</span><span class="p">(</span>
+            <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span>
+            <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">how_entity_by_entity_id</span><span class="p">(</span><span class="n">entity_id</span><span class="p">,</span> <span class="n">flags</span><span class="p">)),</span>
+        <span class="p">)</span>
+
+    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span> <span class="nf">initialize</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">instance_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">settings</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="n">Any</span><span class="p">]],</span>
+        <span class="n">verbose_logging</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
+        <span class="c1"># TODO Need to test this, Optional doesn&#39;t mean it really is optional, it means it can be an int or None; and the default in this case happens to be None.</span>
+        <span class="c1"># TODO This also could be written as Optional[int] and it would still accept an int or None but it&#39;s not as clear.</span>
+        <span class="c1"># TODO Use on other methods such as find_network &amp; find_path for exclusions and required_dsrc?</span>
+        <span class="n">config_id</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="c1"># TODO docstring plugin</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        he ``init`` method initializes the Senzing G2Engine object.</span>
+<span class="sd">        It must be called prior to any other calls.</span>
+
+<span class="sd">        **Note:** If the G2Engine constructor is called with parameters,</span>
+<span class="sd">        the constructor will automatically call the ``init()`` method.</span>
+<span class="sd">        In this case, a separate call to ``init()`` is not needed.</span>
+
+<span class="sd">        Example:</span>
+
+<span class="sd">        .. code-block:: python</span>
+
+<span class="sd">            g2_engine = g2engine.G2Engine(module_name, ini_params)</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            instance_name (str): A short name given to this instance of the G2Engine object, to help identify it within system logs.</span>
+<span class="sd">            settings (str): A JSON string containing configuration parameters.</span>
+<span class="sd">            verbose_logging (int): `Optional:` A flag to enable deeper logging of the G2 processing. 0 for no Senzing logging; 1 for logging. Default: 0</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">            TypeError: Incorrect datatype of input parameter.</span>
+
+<span class="sd">        .. collapse:: Example:</span>
+
+<span class="sd">            .. literalinclude:: ../../examples/g2engine/g2engine_init_and_destroy.py</span>
+<span class="sd">                :linenos:</span>
+<span class="sd">                :language: python</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span> <span class="nf">prime_engine</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        The `prime_engine` method Initializes high resource consumption components of Senzing</span>
+<span class="sd">        used in some functions. If this call is not made, these resources are initialized the</span>
+<span class="sd">        first time they are needed and can cause unusually long processing times the first time</span>
+<span class="sd">        a function is called that requires these resources.</span>
+
+<span class="sd">        Raises:</span>
+
+<span class="sd">        .. collapse:: Example:</span>
+
+<span class="sd">            .. literalinclude:: ../../examples/g2engine/prime_engine.py</span>
+<span class="sd">                :linenos:</span>
+<span class="sd">                :language: python</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+    <span class="c1"># TODO Missing from V4 go lang helpers currently</span>
+    <span class="c1"># TODO GDEV-3771</span>
+    <span class="c1"># @abstractmethod</span>
+    <span class="c1"># def process_redo_record(self, redo_record: str, flags: int, **kwargs: Any) -&gt; str:</span>
+    <span class="c1">#     &quot;&quot;&quot;</span>
+    <span class="c1">#     #TODO The `process_redo_record` method...</span>
+
+    <span class="c1">#     Raises:</span>
+
+    <span class="c1">#     .. collapse:: Example:</span>
+
+    <span class="c1">#         .. literalinclude:: ../../examples/g2engine/prime_engine.py</span>
+    <span class="c1">#             :linenos:</span>
+    <span class="c1">#             :language: python</span>
+    <span class="c1">#     &quot;&quot;&quot;</span>
+
+    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span> <span class="nf">reevaluate_entity</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">entity_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">flags</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        The `reevaluate_entity` method reevaluates the specified entity.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            entity_id (int): The unique identifier of an entity.</span>
+<span class="sd">            flags (int, optional): Flags used to control information returned. Defaults to 0.</span>
+
+<span class="sd">        Raises:</span>
+
+<span class="sd">        .. collapse:: Example:</span>
+
+<span class="sd">            .. literalinclude:: ../../examples/g2engine/reevaluate_entity.py</span>
+<span class="sd">                :linenos:</span>
+<span class="sd">                :language: python</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">reevaluate_entity_return_dict</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">entity_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">flags</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+        <span class="c1"># TODO: Document</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">cast</span><span class="p">(</span>
+            <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span>
+            <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">reevaluate_entity</span><span class="p">(</span><span class="n">entity_id</span><span class="p">,</span> <span class="n">flags</span><span class="p">)),</span>
+        <span class="p">)</span>
+
+    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span> <span class="nf">reevaluate_record</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">data_source_code</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">record_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">flags</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        The `reevaluate_record` method reevaluates a specific record.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            data_source_code (str): Identifies the provenance of the data.</span>
+<span class="sd">            record_id (str): The unique identifier within the records of the same data source.</span>
+<span class="sd">            flags (int, optional):  Flags used to control information returned. Defaults to 0.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            str: If flags are set to return the WITH_INFO response a JSON document containing the details, otherwise an empty JSON document.</span>
+
+<span class="sd">        Raises:</span>
+
+<span class="sd">        .. collapse:: Example:</span>
+
+<span class="sd">            .. literalinclude:: ../../examples/g2engine/reevaluate_entity.py</span>
+<span class="sd">                :linenos:</span>
+<span class="sd">                :language: python</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">reevaluate_record_return_dict</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">data_source_code</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">record_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">flags</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+        <span class="c1"># TODO: Document</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">cast</span><span class="p">(</span>
+            <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span>
+            <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">reevaluate_record</span><span class="p">(</span><span class="n">data_source_code</span><span class="p">,</span> <span class="n">record_id</span><span class="p">,</span> <span class="n">flags</span><span class="p">)),</span>
+        <span class="p">)</span>
+
+    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span> <span class="nf">reinitialize</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        The `reinit` method re-initializes the Senzing G2Engine object using a specific configuration</span>
+<span class="sd">        identifier. A list of available configuration identifiers can be retrieved using</span>
+<span class="sd">        `g2configmgr.get_config_list`.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            init_config_id (int): The configuration ID used for the initialization</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">            TypeError: Incorrect datatype of input parameter.</span>
+<span class="sd">            g2exception.G2Exception: init_config_id does not exist.</span>
+
+<span class="sd">        .. collapse:: Example:</span>
+
+<span class="sd">            .. literalinclude:: ../../examples/g2engine/g2engine_reinit.py</span>
+<span class="sd">                :linenos:</span>
+<span class="sd">                :language: python</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span> <span class="nf">replace_record</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">data_source_code</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">record_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">record_definition</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="n">Any</span><span class="p">]],</span>
+        <span class="n">flags</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        The `replace_record` method updates/replaces a record in the Senzing repository.</span>
+<span class="sd">        If record doesn&#39;t exist, a new record is added to the data repository.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            data_source_code (str): Identifies the provenance of the data.</span>
+<span class="sd">            record_id (str): The unique identifier within the records of the same data source.</span>
+<span class="sd">            record_definition (str): A JSON document containing the record to be added to the Senzing repository.</span>
+<span class="sd">            flags (int, optional):  Flags used to control information returned. Defaults to 0.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            str: If flags are set to return the WITH_INFO response a JSON document containing the details, otherwise an empty JSON document.</span>
+
+<span class="sd">        Raises:</span>
+
+<span class="sd">        .. collapse:: Example:</span>
+
+<span class="sd">            .. literalinclude:: ../../examples/g2engine/replace_record.py</span>
+<span class="sd">                :linenos:</span>
+<span class="sd">                :language: python</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">replace_record_return_dict</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">data_source_code</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">record_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">record_definition</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="n">Any</span><span class="p">]],</span>
+        <span class="n">flags</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+        <span class="c1"># TODO: Document</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">cast</span><span class="p">(</span>
+            <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span>
+            <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">replace_record</span><span class="p">(</span>
+                    <span class="n">data_source_code</span><span class="p">,</span> <span class="n">record_id</span><span class="p">,</span> <span class="n">record_definition</span><span class="p">,</span> <span class="n">flags</span>
+                <span class="p">)</span>
+            <span class="p">),</span>
+        <span class="p">)</span>
+
+    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span> <span class="nf">search_by_attributes</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">attributes</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="n">Any</span><span class="p">]],</span>
+        <span class="n">search_profile</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;SEARCH&quot;</span><span class="p">,</span>
+        <span class="n">flags</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">G2EngineFlags</span><span class="o">.</span><span class="n">G2_SEARCH_BY_ATTRIBUTES_DEFAULT_FLAGS</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        The `search_by_attributes` method retrieves entity data based on a user-specified set of entity attributes.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            attributes (str):  A JSON document with the attribute data to search for.</span>
+<span class="sd">            search_profile (str): The name of a configured search profile. Defaults to SEARCH.</span>
+<span class="sd">            flags (int, optional): _description_. Defaults to G2EngineFlags.G2_SEARCH_BY_ATTRIBUTES_DEFAULT_FLAGS.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            str: A JSON document.</span>
+
+<span class="sd">        Raises:</span>
+
+<span class="sd">        .. collapse:: Example:</span>
+
+<span class="sd">            .. literalinclude:: ../../examples/g2engine/search_by_attributes.py</span>
+<span class="sd">                :linenos:</span>
+<span class="sd">                :language: python</span>
+
+<span class="sd">            **Output:**</span>
+
+<span class="sd">            .. literalinclude:: ../../examples/g2engine/search_by_attributes.txt</span>
+<span class="sd">                :linenos:</span>
+<span class="sd">                :language: json</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">search_by_attributes_return_dict</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">attributes</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="n">Any</span><span class="p">]],</span>
+        <span class="n">search_profile</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;SEARCH&quot;</span><span class="p">,</span>
+        <span class="n">flags</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">G2EngineFlags</span><span class="o">.</span><span class="n">G2_SEARCH_BY_ATTRIBUTES_DEFAULT_FLAGS</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+        <span class="c1"># TODO: Document</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">cast</span><span class="p">(</span>
+            <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span>
+            <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">search_by_attributes</span><span class="p">(</span><span class="n">attributes</span><span class="p">,</span> <span class="n">search_profile</span><span class="p">,</span> <span class="n">flags</span><span class="p">)),</span>
+        <span class="p">)</span>
+
+    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span> <span class="nf">why_entities</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">entity_id_1</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">entity_id_2</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">flags</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">G2EngineFlags</span><span class="o">.</span><span class="n">G2_WHY_ENTITIES_DEFAULT_FLAGS</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        The `why_entities` method determines why entities did not resolve or why they do relate.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            entity_id_1 (int): The entity ID for the starting entity of the search path.</span>
+<span class="sd">            entity_id_2 (int): The entity ID for the ending entity of the search path.</span>
+<span class="sd">            flags (int, optional): Flags used to control information returned. Defaults to G2EngineFlags.G2_WHY_ENTITY_DEFAULT_FLAGS.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            str: A JSON document.</span>
+
+<span class="sd">        Raises:</span>
+
+<span class="sd">        .. collapse:: Example:</span>
+
+<span class="sd">            .. literalinclude:: ../../examples/g2engine/why_entities.py</span>
+<span class="sd">                :linenos:</span>
+<span class="sd">                :language: python</span>
+
+<span class="sd">            **Output:**</span>
+
+<span class="sd">            .. literalinclude:: ../../examples/g2engine/why_entities.txt</span>
+<span class="sd">                :linenos:</span>
+<span class="sd">                :language: json</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">why_entities_return_dict</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">entity_id_1</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">entity_id_2</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">flags</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">G2EngineFlags</span><span class="o">.</span><span class="n">G2_WHY_ENTITIES_DEFAULT_FLAGS</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;TODO: document&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">cast</span><span class="p">(</span>
+            <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span>
+            <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">why_entities</span><span class="p">(</span><span class="n">entity_id_1</span><span class="p">,</span> <span class="n">entity_id_2</span><span class="p">,</span> <span class="n">flags</span><span class="p">)),</span>
+        <span class="p">)</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; &quot;&quot;&quot;</span>
+
+    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span> <span class="nf">why_records</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">data_source_code_1</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">record_id_1</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">data_source_code_2</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">record_id_2</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">flags</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">G2EngineFlags</span><span class="o">.</span><span class="n">G2_WHY_RECORDS_DEFAULT_FLAGS</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        The `why_records` determines if any two records can or cannot resolve together, or if they relate.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            data_source_code_1 (str): Identifies the provenance of the data.</span>
+<span class="sd">            record_id_1 (str): The unique identifier within the records of the same data source.</span>
+<span class="sd">            data_source_code_2 (str): Identifies the provenance of the data.</span>
+<span class="sd">            record_id_2 (str): The unique identifier within the records of the same data source.</span>
+<span class="sd">            flags (int, optional): Flags used to control information returned. Defaults to G2EngineFlags.G2_WHY_ENTITY_DEFAULT_FLAGS.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            str: A JSON document.</span>
+
+<span class="sd">        Raises:</span>
+
+<span class="sd">        .. collapse:: Example:</span>
+
+<span class="sd">            .. literalinclude:: ../../examples/g2engine/why_records.py</span>
+<span class="sd">                :linenos:</span>
+<span class="sd">                :language: python</span>
+
+<span class="sd">            **Output:**</span>
+
+<span class="sd">        .. literalinclude:: ../../examples/g2engine/why_records.txt</span>
+<span class="sd">                :linenos:</span>
+<span class="sd">                :language: json</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">why_records_return_dict</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">data_source_code_1</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">record_id_1</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">data_source_code_2</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">record_id_2</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">flags</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">G2EngineFlags</span><span class="o">.</span><span class="n">G2_WHY_RECORDS_DEFAULT_FLAGS</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;TODO: document&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">cast</span><span class="p">(</span>
+            <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span>
+            <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">why_records</span><span class="p">(</span>
+                    <span class="n">data_source_code_1</span><span class="p">,</span>
+                    <span class="n">record_id_1</span><span class="p">,</span>
+                    <span class="n">data_source_code_2</span><span class="p">,</span>
+                    <span class="n">record_id_2</span><span class="p">,</span>
+                    <span class="n">flags</span><span class="p">,</span>
+                <span class="p">)</span>
+            <span class="p">),</span>
+        <span class="p">)</span>
+
+    <span class="c1"># TODO why_record_in_entity() - doesn&#39;t exist in go helpers</span>
+    <span class="c1"># TODO GDEV-3772</span>
+    <span class="c1"># @abstractmethod</span>
+    <span class="c1"># def why_record_in_entity(</span>
+    <span class="c1">#     self,</span>
+    <span class="c1">#     data_source_code: str,</span>
+    <span class="c1">#     record_id: str,</span>
+    <span class="c1">#     flags: int = G2EngineFlags.G2_WHY_ENTITY_DEFAULT_FLAGS,</span>
+    <span class="c1">#     **kwargs: Any,</span>
+    <span class="c1"># ) -&gt; str:</span>
+    <span class="c1">#     &quot;&quot;&quot; &quot;&quot;&quot;</span>
+
+    <span class="c1"># def why_record_in_entity_return_dict(</span>
+    <span class="c1">#     self,</span>
+    <span class="c1">#     data_source_code: str,</span>
+    <span class="c1">#     record_id: str,</span>
+    <span class="c1">#     flags: int = G2EngineFlags.G2_WHY_ENTITY_DEFAULT_FLAGS,</span>
+    <span class="c1">#     **kwargs: Any,</span>
+    <span class="c1"># ) -&gt; Dict[str, Any]:</span>
+    <span class="c1">#     # TODO document</span>
+    <span class="c1">#     &quot;&quot;&quot; &quot;&quot;&quot;</span>
+    <span class="c1">#     # TODO Is the cast needed?</span>
+    <span class="c1">#     return cast(</span>
+    <span class="c1">#         Dict[str, Any],</span>
+    <span class="c1">#         json.loads(</span>
+    <span class="c1">#             self.why_record_in_entity(</span>
+    <span class="c1">#                 data_source_code,</span>
+    <span class="c1">#                 record_id,</span>
+    <span class="c1">#                 flags,</span>
+    <span class="c1">#             )</span>
+    <span class="c1">#         ),</span>
+    <span class="c1">#     )</span>
+
+    <span class="c1"># -------------------------------------------------------------------------</span>
+    <span class="c1"># Convenience methods</span>
+    <span class="c1"># -------------------------------------------------------------------------</span>
+
+    <span class="c1"># TODO Keep with _return_dict methods?</span>
+    <span class="k">def</span> <span class="nf">get_record_as_dict</span><span class="p">(</span>
+        <span class="c1"># self, data_source_code: str, record_id: str, **kwargs: Any</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">data_source_code</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">record_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">flags</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">G2EngineFlags</span><span class="o">.</span><span class="n">G2_RECORD_DEFAULT_FLAGS</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+        <span class="c1"># TODO document</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">cast</span><span class="p">(</span>
+            <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span>
+            <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_record</span><span class="p">(</span><span class="n">data_source_code</span><span class="p">,</span> <span class="n">record_id</span><span class="p">,</span> <span class="n">flags</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)),</span>
+        <span class="p">)</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Senzing.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

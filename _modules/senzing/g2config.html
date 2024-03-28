@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>senzing.g2config &mdash; g2-sdk-python-next  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=19f00094" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
+        <script src="../../_static/doctools.js?v=888ff710"></script>
+        <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            g2-sdk-python-next
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <!-- Local TOC -->
+              <div class="local-toc"></div>
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">g2-sdk-python-next</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">senzing.g2config</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for senzing.g2config</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">The `g2config` package is used to modify the in-memory representation of a Senzing configuration.</span>
+<span class="sd">It is a wrapper over Senzing&#39;s G2Config C binding.</span>
+<span class="sd">It conforms to the interface specified in</span>
+<span class="sd">`g2config_abstract.py &lt;https://github.com/Senzing/g2-sdk-python-next/blob/main/src/senzing/g2config_abstract.py&gt;`_</span>
+
+<span class="sd">To use g2config,</span>
+<span class="sd">the **LD_LIBRARY_PATH** environment variable must include a path to Senzing&#39;s libraries.</span>
+
+<span class="sd">Example:</span>
+
+<span class="sd">.. code-block:: bash</span>
+
+<span class="sd">    export LD_LIBRARY_PATH=/opt/senzing/g2/lib</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="c1"># pylint: disable=R0903</span>
+
+
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">from</span> <span class="nn">ctypes</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">POINTER</span><span class="p">,</span>
+    <span class="n">Structure</span><span class="p">,</span>
+    <span class="n">c_char</span><span class="p">,</span>
+    <span class="n">c_char_p</span><span class="p">,</span>
+    <span class="n">c_int</span><span class="p">,</span>
+    <span class="n">c_longlong</span><span class="p">,</span>
+    <span class="n">c_size_t</span><span class="p">,</span>
+    <span class="n">c_uint</span><span class="p">,</span>
+    <span class="n">c_void_p</span><span class="p">,</span>
+    <span class="n">cdll</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Union</span>
+
+<span class="kn">from</span> <span class="nn">.g2config_abstract</span> <span class="kn">import</span> <span class="n">G2ConfigAbstract</span>
+<span class="kn">from</span> <span class="nn">.g2exception</span> <span class="kn">import</span> <span class="n">G2Exception</span><span class="p">,</span> <span class="n">new_g2exception</span>
+<span class="kn">from</span> <span class="nn">.g2helpers</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">as_c_char_p</span><span class="p">,</span>
+    <span class="n">as_c_int</span><span class="p">,</span>
+    <span class="n">as_python_int</span><span class="p">,</span>
+    <span class="n">as_python_str</span><span class="p">,</span>
+    <span class="n">as_str</span><span class="p">,</span>
+    <span class="n">as_uintptr_t</span><span class="p">,</span>
+    <span class="n">find_file_in_path</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span> <span class="nn">.g2version</span> <span class="kn">import</span> <span class="n">is_supported_senzingapi_version</span>
+
+<span class="c1"># Metadata</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;G2Config&quot;</span><span class="p">]</span>
+<span class="n">__version__</span> <span class="o">=</span> <span class="s2">&quot;0.0.1&quot;</span>  <span class="c1"># See https://www.python.org/dev/peps/pep-0396/</span>
+<span class="n">__date__</span> <span class="o">=</span> <span class="s2">&quot;2023-10-30&quot;</span>
+<span class="n">__updated__</span> <span class="o">=</span> <span class="s2">&quot;2023-11-07&quot;</span>
+
+<span class="n">SENZING_PRODUCT_ID</span> <span class="o">=</span> <span class="s2">&quot;5040&quot;</span>  <span class="c1"># See https://github.com/Senzing/knowledge-base/blob/main/lists/senzing-component-ids.md</span>
+<span class="n">CALLER_SKIP</span> <span class="o">=</span> <span class="mi">5</span>
+
+<span class="c1"># -----------------------------------------------------------------------------</span>
+<span class="c1"># Classes that are result structures from calls to Senzing</span>
+<span class="c1"># -----------------------------------------------------------------------------</span>
+
+
+<span class="k">class</span> <span class="nc">G2ResponseAsCharPointerResult</span><span class="p">(</span><span class="n">Structure</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Simple response, return_code structure&quot;&quot;&quot;</span>
+
+    <span class="n">_fields_</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="p">(</span><span class="s2">&quot;response&quot;</span><span class="p">,</span> <span class="n">POINTER</span><span class="p">(</span><span class="n">c_char</span><span class="p">)),</span>
+        <span class="p">(</span><span class="s2">&quot;return_code&quot;</span><span class="p">,</span> <span class="n">c_longlong</span><span class="p">),</span>
+    <span class="p">]</span>
+
+
+<span class="k">class</span> <span class="nc">G2ResponseAsVoidPointerResult</span><span class="p">(</span><span class="n">Structure</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Simple response, return_code structure&quot;&quot;&quot;</span>
+
+    <span class="n">_fields_</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="p">(</span><span class="s2">&quot;response&quot;</span><span class="p">,</span> <span class="n">c_void_p</span><span class="p">),</span>
+        <span class="p">(</span><span class="s2">&quot;return_code&quot;</span><span class="p">,</span> <span class="n">c_longlong</span><span class="p">),</span>
+    <span class="p">]</span>
+
+
+<span class="k">class</span> <span class="nc">G2ConfigAddDataSourceResult</span><span class="p">(</span><span class="n">G2ResponseAsCharPointerResult</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;In golang_helpers.h G2Config_addDataSource_result&quot;&quot;&quot;</span>
+
+
+<span class="k">class</span> <span class="nc">G2ConfigCreateResult</span><span class="p">(</span><span class="n">G2ResponseAsVoidPointerResult</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;In golang_helpers.h G2Config_create_result&quot;&quot;&quot;</span>
+
+
+<span class="k">class</span> <span class="nc">G2ConfigListDataSourcesResult</span><span class="p">(</span><span class="n">G2ResponseAsCharPointerResult</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;In golang_helpers.h G2Config_listDataSources_result&quot;&quot;&quot;</span>
+
+
+<span class="k">class</span> <span class="nc">G2ConfigLoadResult</span><span class="p">(</span><span class="n">G2ResponseAsVoidPointerResult</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;In golang_helpers.h G2Config_load_result&quot;&quot;&quot;</span>
+
+
+<span class="k">class</span> <span class="nc">G2ConfigSaveResult</span><span class="p">(</span><span class="n">G2ResponseAsCharPointerResult</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;In golang_helpers.h G2Config_save_result&quot;&quot;&quot;</span>
+
+
+<span class="c1"># -----------------------------------------------------------------------------</span>
+<span class="c1"># G2Config class</span>
+<span class="c1"># -----------------------------------------------------------------------------</span>
+
+
+<div class="viewcode-block" id="G2Config">
+<a class="viewcode-back" href="../../senzing.html#senzing.g2config.G2Config">[docs]</a>
+<span class="k">class</span> <span class="nc">G2Config</span><span class="p">(</span><span class="n">G2ConfigAbstract</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    The `init` method initializes the Senzing G2Config object.</span>
+<span class="sd">    It must be called prior to any other calls.</span>
+
+<span class="sd">    **Note:** If the G2Config constructor is called with parameters,</span>
+<span class="sd">    the constructor will automatically call the `init()` method.</span>
+
+<span class="sd">    Example:</span>
+
+<span class="sd">    .. code-block:: python</span>
+
+<span class="sd">        g2_config = g2config.G2Config(module_name, ini_params)</span>
+
+
+<span class="sd">    If the G2Config constructor is called without parameters,</span>
+<span class="sd">    the `init()` method must be called to initialize the use of G2Product.</span>
+
+<span class="sd">    Example:</span>
+
+<span class="sd">    .. code-block:: python</span>
+
+<span class="sd">        g2_config = g2config.G2Config()</span>
+<span class="sd">        g2_config.init(module_name, ini_params)</span>
+
+<span class="sd">    Either `module_name` and `ini_params` must both be specified or neither must be specified.</span>
+<span class="sd">    Just specifying one or the other results in a **G2Exception**.</span>
+
+<span class="sd">    Parameters:</span>
+<span class="sd">        module_name:</span>
+<span class="sd">            `Optional:` A name for the auditing node, to help identify it within system logs. Default: &quot;&quot;</span>
+<span class="sd">        ini_params:</span>
+<span class="sd">            `Optional:` A JSON string containing configuration parameters. Default: &quot;&quot;</span>
+<span class="sd">        init_config_id:</span>
+<span class="sd">            `Optional:` Specify the ID of a specific Senzing configuration. Default: 0 - Use default Senzing configuration</span>
+<span class="sd">        verbose_logging:</span>
+<span class="sd">            `Optional:` A flag to enable deeper logging of the G2 processing. 0 for no Senzing logging; 1 for logging. Default: 0</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">        TypeError: Incorrect datatype detected on input parameter.</span>
+<span class="sd">        g2exception.G2Exception: Failed to load the G2 library or incorrect `module_name`, `ini_params` combination.</span>
+
+<span class="sd">    .. collapse:: Example:</span>
+
+<span class="sd">        .. literalinclude:: ../../examples/g2config/g2config_constructor.py</span>
+<span class="sd">            :linenos:</span>
+<span class="sd">            :language: python</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># TODO: Consider making usual constructor private (`g2config.G2Config()`)</span>
+    <span class="c1"># and replacing it with static constructor (i.e. `g2config.NewABC(str,str)`, `g2config.NewDEF(str,dict))</span>
+
+    <span class="c1"># -------------------------------------------------------------------------</span>
+    <span class="c1"># Python dunder/magic methods</span>
+    <span class="c1"># -------------------------------------------------------------------------</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">module_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="p">,</span>
+        <span class="n">ini_params</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="p">,</span>
+        <span class="n">init_config_id</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
+        <span class="n">verbose_logging</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Constructor</span>
+
+<span class="sd">        For return value of -&gt; None, see https://peps.python.org/pep-0484/#the-meaning-of-annotations</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># pylint: disable=W0613</span>
+
+        <span class="c1"># Verify parameters.</span>
+        <span class="c1"># TODO: Support init_config_id</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">auto_init</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ini_params</span> <span class="o">=</span> <span class="n">as_str</span><span class="p">(</span><span class="n">ini_params</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">init_config_id</span> <span class="o">=</span> <span class="n">init_config_id</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">module_name</span> <span class="o">=</span> <span class="n">module_name</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">verbose_logging</span> <span class="o">=</span> <span class="n">verbose_logging</span>
+
+        <span class="c1"># Determine if Senzing API version is acceptable.</span>
+
+        <span class="n">is_supported_senzingapi_version</span><span class="p">()</span>
+
+        <span class="c1"># Load binary library.</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="s2">&quot;nt&quot;</span><span class="p">:</span>
+                <span class="c1"># TODO: See if find_file_in_path can be factored out.</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">library_handle</span> <span class="o">=</span> <span class="n">cdll</span><span class="o">.</span><span class="n">LoadLibrary</span><span class="p">(</span><span class="n">find_file_in_path</span><span class="p">(</span><span class="s2">&quot;G2.dll&quot;</span><span class="p">))</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">library_handle</span> <span class="o">=</span> <span class="n">cdll</span><span class="o">.</span><span class="n">LoadLibrary</span><span class="p">(</span><span class="s2">&quot;libG2.so&quot;</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">OSError</span> <span class="k">as</span> <span class="n">err</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">G2Exception</span><span class="p">(</span><span class="s2">&quot;Failed to load the G2 library&quot;</span><span class="p">)</span> <span class="kn">from</span> <span class="nn">err</span>
+
+        <span class="c1"># Initialize C function input parameters and results.</span>
+        <span class="c1"># Must be synchronized with g2/sdk/c/libg2config.h</span>
+
+        <span class="c1"># self.library_handle.G2Config_addDataSource.argtypes = [c_void_p, c_char_p, POINTER(c_char_p), POINTER(c_size_t), self._resize_func_def]</span>
+        <span class="c1"># self.library_handle.G2Config_addDataSource.restype = c_longlong</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">library_handle</span><span class="o">.</span><span class="n">G2Config_addDataSource_helper</span><span class="o">.</span><span class="n">argtypes</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="n">POINTER</span><span class="p">(</span><span class="n">c_uint</span><span class="p">),</span>
+            <span class="n">c_char_p</span><span class="p">,</span>
+        <span class="p">]</span>  <span class="c1"># TODO: This may not be correct</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">library_handle</span><span class="o">.</span><span class="n">G2Config_addDataSource_helper</span><span class="o">.</span><span class="n">restype</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">G2ConfigAddDataSourceResult</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">library_handle</span><span class="o">.</span><span class="n">G2Config_clearLastException</span><span class="o">.</span><span class="n">argtypes</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">library_handle</span><span class="o">.</span><span class="n">G2Config_clearLastException</span><span class="o">.</span><span class="n">restype</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="c1"># self.library_handle.G2Config_close.argtypes = [c_void_p]</span>
+        <span class="c1"># self.library_handle.G2Config_close.restype = c_longlong</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">library_handle</span><span class="o">.</span><span class="n">G2Config_close_helper</span><span class="o">.</span><span class="n">argtypes</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="n">POINTER</span><span class="p">(</span><span class="n">c_uint</span><span class="p">)</span>
+        <span class="p">]</span>  <span class="c1"># TODO: This may not be correct</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">library_handle</span><span class="o">.</span><span class="n">G2Config_close_helper</span><span class="o">.</span><span class="n">restype</span> <span class="o">=</span> <span class="n">c_longlong</span>
+        <span class="c1"># self.library_handle.G2Config_create.argtypes = [POINTER(c_void_p)]</span>
+        <span class="c1"># self.library_handle.G2Config_create.restype = c_longlong</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">library_handle</span><span class="o">.</span><span class="n">G2Config_create_helper</span><span class="o">.</span><span class="n">argtypes</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">library_handle</span><span class="o">.</span><span class="n">G2Config_create_helper</span><span class="o">.</span><span class="n">restype</span> <span class="o">=</span> <span class="n">G2ConfigCreateResult</span>
+        <span class="c1"># self.library_handle.G2Config_deleteDataSource.argtypes = [c_void_p, c_char_p]</span>
+        <span class="c1"># self.library_handle.G2Config_deleteDataSource.restype = c_longlong</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">library_handle</span><span class="o">.</span><span class="n">G2Config_deleteDataSource_helper</span><span class="o">.</span><span class="n">argtypes</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="n">POINTER</span><span class="p">(</span><span class="n">c_uint</span><span class="p">),</span>
+            <span class="n">c_char_p</span><span class="p">,</span>
+        <span class="p">]</span>  <span class="c1"># TODO: This may not be correct</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">library_handle</span><span class="o">.</span><span class="n">G2Config_deleteDataSource_helper</span><span class="o">.</span><span class="n">restype</span> <span class="o">=</span> <span class="n">c_longlong</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">library_handle</span><span class="o">.</span><span class="n">G2Config_destroy</span><span class="o">.</span><span class="n">argtypes</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">library_handle</span><span class="o">.</span><span class="n">G2Config_destroy</span><span class="o">.</span><span class="n">restype</span> <span class="o">=</span> <span class="n">c_longlong</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">library_handle</span><span class="o">.</span><span class="n">G2Config_getLastException</span><span class="o">.</span><span class="n">argtypes</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="n">POINTER</span><span class="p">(</span><span class="n">c_char</span><span class="p">),</span>
+            <span class="n">c_size_t</span><span class="p">,</span>
+        <span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">library_handle</span><span class="o">.</span><span class="n">G2Config_getLastException</span><span class="o">.</span><span class="n">restype</span> <span class="o">=</span> <span class="n">c_longlong</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">library_handle</span><span class="o">.</span><span class="n">G2Config_getLastExceptionCode</span><span class="o">.</span><span class="n">argtypes</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">library_handle</span><span class="o">.</span><span class="n">G2Config_getLastExceptionCode</span><span class="o">.</span><span class="n">restype</span> <span class="o">=</span> <span class="n">c_longlong</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">library_handle</span><span class="o">.</span><span class="n">G2Config_init</span><span class="o">.</span><span class="n">argtypes</span> <span class="o">=</span> <span class="p">[</span><span class="n">c_char_p</span><span class="p">,</span> <span class="n">c_char_p</span><span class="p">,</span> <span class="n">c_int</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">library_handle</span><span class="o">.</span><span class="n">G2Config_init</span><span class="o">.</span><span class="n">restype</span> <span class="o">=</span> <span class="n">c_longlong</span>
+        <span class="c1"># self.library_handle.G2Config_listDataSources.argtypes = [c_void_p, POINTER(c_char_p), POINTER(c_size_t), self._resize_func_def]</span>
+        <span class="c1"># self.library_handle.G2Config_listDataSources.restype = c_longlong</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">library_handle</span><span class="o">.</span><span class="n">G2Config_listDataSources_helper</span><span class="o">.</span><span class="n">argtypes</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="n">POINTER</span><span class="p">(</span><span class="n">c_uint</span><span class="p">)</span>
+        <span class="p">]</span>  <span class="c1"># TODO: This may not be correct</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">library_handle</span><span class="o">.</span><span class="n">G2Config_listDataSources_helper</span><span class="o">.</span><span class="n">restype</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">G2ConfigListDataSourcesResult</span>
+        <span class="p">)</span>
+        <span class="c1"># self.library_handle.G2Config_load.argtypes = [c_char_p, POINTER(c_void_p)]</span>
+        <span class="c1"># self.library_handle.G2Config_load.restype = c_longlong</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">library_handle</span><span class="o">.</span><span class="n">G2Config_load_helper</span><span class="o">.</span><span class="n">argtypes</span> <span class="o">=</span> <span class="p">[</span><span class="n">c_char_p</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">library_handle</span><span class="o">.</span><span class="n">G2Config_load_helper</span><span class="o">.</span><span class="n">restype</span> <span class="o">=</span> <span class="n">G2ConfigLoadResult</span>
+        <span class="c1"># self.library_handle.G2Config_save.argtypes = [c_void_p, POINTER(c_char_p), POINTER(c_size_t), self._resize_func_def]</span>
+        <span class="c1"># self.library_handle.G2Config_save.restype = c_longlong</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">library_handle</span><span class="o">.</span><span class="n">G2Config_save_helper</span><span class="o">.</span><span class="n">argtypes</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="n">POINTER</span><span class="p">(</span><span class="n">c_uint</span><span class="p">)</span>
+        <span class="p">]</span>  <span class="c1"># TODO: This may not be correct</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">library_handle</span><span class="o">.</span><span class="n">G2Config_save_helper</span><span class="o">.</span><span class="n">restype</span> <span class="o">=</span> <span class="n">G2ConfigSaveResult</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">library_handle</span><span class="o">.</span><span class="n">G2GoHelper_free</span><span class="o">.</span><span class="n">argtypes</span> <span class="o">=</span> <span class="p">[</span><span class="n">c_char_p</span><span class="p">]</span>
+
+        <span class="c1"># Optionally, initialize Senzing engine.</span>
+
+        <span class="k">if</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">module_name</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span> <span class="ow">or</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ini_params</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">):</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">module_name</span><span class="p">)</span> <span class="o">+</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ini_params</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="bp">self</span><span class="o">.</span><span class="n">new_exception</span><span class="p">(</span><span class="mi">4020</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">module_name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">ini_params</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">module_name</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">auto_init</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">init</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">module_name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">ini_params</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose_logging</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__del__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Destructor&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">auto_init</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">destroy</span><span class="p">()</span>
+
+    <span class="c1"># -------------------------------------------------------------------------</span>
+    <span class="c1"># Exception helpers</span>
+    <span class="c1"># -------------------------------------------------------------------------</span>
+
+    <span class="k">def</span> <span class="nf">new_exception</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">error_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="ne">Exception</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Generate a new exception based on the error_id.</span>
+
+<span class="sd">        :meta private:</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">new_g2exception</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">library_handle</span><span class="o">.</span><span class="n">G2Config_getLastException</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">library_handle</span><span class="o">.</span><span class="n">G2Config_clearLastException</span><span class="p">,</span>
+            <span class="n">SENZING_PRODUCT_ID</span><span class="p">,</span>
+            <span class="n">error_id</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">ID_MESSAGES</span><span class="p">,</span>
+            <span class="n">CALLER_SKIP</span><span class="p">,</span>
+            <span class="o">*</span><span class="n">args</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="c1"># -------------------------------------------------------------------------</span>
+    <span class="c1"># G2Config methods</span>
+    <span class="c1"># -------------------------------------------------------------------------</span>
+
+<div class="viewcode-block" id="G2Config.add_data_source">
+<a class="viewcode-back" href="../../senzing.html#senzing.g2config.G2Config.add_data_source">[docs]</a>
+    <span class="k">def</span> <span class="nf">add_data_source</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">config_handle</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">input_json</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="n">Any</span><span class="p">]],</span>
+        <span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">library_handle</span><span class="o">.</span><span class="n">G2Config_addDataSource_helper</span><span class="p">(</span>
+            <span class="n">as_uintptr_t</span><span class="p">(</span><span class="n">config_handle</span><span class="p">),</span> <span class="n">as_c_char_p</span><span class="p">(</span><span class="n">as_str</span><span class="p">(</span><span class="n">input_json</span><span class="p">))</span>
+        <span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">result</span><span class="o">.</span><span class="n">return_code</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="bp">self</span><span class="o">.</span><span class="n">new_exception</span><span class="p">(</span>
+                    <span class="mi">4001</span><span class="p">,</span> <span class="n">config_handle</span><span class="p">,</span> <span class="n">as_str</span><span class="p">(</span><span class="n">input_json</span><span class="p">),</span> <span class="n">result</span><span class="o">.</span><span class="n">return_code</span>
+                <span class="p">)</span>
+            <span class="n">result_response</span> <span class="o">=</span> <span class="n">as_python_str</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">response</span><span class="p">)</span>
+        <span class="k">finally</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">library_handle</span><span class="o">.</span><span class="n">G2GoHelper_free</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">response</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">result_response</span></div>
+
+
+<div class="viewcode-block" id="G2Config.close">
+<a class="viewcode-back" href="../../senzing.html#senzing.g2config.G2Config.close">[docs]</a>
+    <span class="k">def</span> <span class="nf">close</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config_handle</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">library_handle</span><span class="o">.</span><span class="n">G2Config_close_helper</span><span class="p">(</span><span class="n">as_uintptr_t</span><span class="p">(</span><span class="n">config_handle</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">result</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="bp">self</span><span class="o">.</span><span class="n">new_exception</span><span class="p">(</span><span class="mi">4002</span><span class="p">,</span> <span class="n">config_handle</span><span class="p">,</span> <span class="n">result</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="G2Config.create">
+<a class="viewcode-back" href="../../senzing.html#senzing.g2config.G2Config.create">[docs]</a>
+    <span class="k">def</span> <span class="nf">create</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">library_handle</span><span class="o">.</span><span class="n">G2Config_create_helper</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">result</span><span class="o">.</span><span class="n">return_code</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="bp">self</span><span class="o">.</span><span class="n">new_exception</span><span class="p">(</span><span class="mi">4003</span><span class="p">,</span> <span class="n">result</span><span class="o">.</span><span class="n">return_code</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">as_python_int</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">response</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="G2Config.delete_data_source">
+<a class="viewcode-back" href="../../senzing.html#senzing.g2config.G2Config.delete_data_source">[docs]</a>
+    <span class="k">def</span> <span class="nf">delete_data_source</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">config_handle</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">input_json</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="n">Any</span><span class="p">]],</span>
+        <span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">library_handle</span><span class="o">.</span><span class="n">G2Config_deleteDataSource_helper</span><span class="p">(</span>
+            <span class="n">as_uintptr_t</span><span class="p">(</span><span class="n">config_handle</span><span class="p">),</span> <span class="n">as_c_char_p</span><span class="p">(</span><span class="n">as_str</span><span class="p">(</span><span class="n">input_json</span><span class="p">))</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="n">result</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="bp">self</span><span class="o">.</span><span class="n">new_exception</span><span class="p">(</span>
+                <span class="mi">4004</span><span class="p">,</span> <span class="n">config_handle</span><span class="p">,</span> <span class="n">as_str</span><span class="p">(</span><span class="n">input_json</span><span class="p">),</span> <span class="n">result</span><span class="o">.</span><span class="n">return_code</span>
+            <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="G2Config.destroy">
+<a class="viewcode-back" href="../../senzing.html#senzing.g2config.G2Config.destroy">[docs]</a>
+    <span class="k">def</span> <span class="nf">destroy</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">library_handle</span><span class="o">.</span><span class="n">G2Config_destroy</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">result</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="bp">self</span><span class="o">.</span><span class="n">new_exception</span><span class="p">(</span><span class="mi">4006</span><span class="p">,</span> <span class="n">result</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="G2Config.init">
+<a class="viewcode-back" href="../../senzing.html#senzing.g2config.G2Config.init">[docs]</a>
+    <span class="k">def</span> <span class="nf">init</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">module_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">ini_params</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="n">Any</span><span class="p">]],</span>
+        <span class="n">verbose_logging</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">library_handle</span><span class="o">.</span><span class="n">G2Config_init</span><span class="p">(</span>
+            <span class="n">as_c_char_p</span><span class="p">(</span><span class="n">module_name</span><span class="p">),</span>
+            <span class="n">as_c_char_p</span><span class="p">(</span><span class="n">as_str</span><span class="p">(</span><span class="n">ini_params</span><span class="p">)),</span>
+            <span class="n">as_c_int</span><span class="p">(</span><span class="n">verbose_logging</span><span class="p">),</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="n">result</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="bp">self</span><span class="o">.</span><span class="n">new_exception</span><span class="p">(</span>
+                <span class="mi">4007</span><span class="p">,</span> <span class="n">module_name</span><span class="p">,</span> <span class="n">as_str</span><span class="p">(</span><span class="n">ini_params</span><span class="p">),</span> <span class="n">verbose_logging</span><span class="p">,</span> <span class="n">result</span>
+            <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="G2Config.list_data_sources">
+<a class="viewcode-back" href="../../senzing.html#senzing.g2config.G2Config.list_data_sources">[docs]</a>
+    <span class="k">def</span> <span class="nf">list_data_sources</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config_handle</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">library_handle</span><span class="o">.</span><span class="n">G2Config_listDataSources_helper</span><span class="p">(</span>
+            <span class="n">as_uintptr_t</span><span class="p">(</span><span class="n">config_handle</span><span class="p">)</span>
+        <span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">result</span><span class="o">.</span><span class="n">return_code</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="bp">self</span><span class="o">.</span><span class="n">new_exception</span><span class="p">(</span><span class="mi">4008</span><span class="p">,</span> <span class="n">result</span><span class="o">.</span><span class="n">return_code</span><span class="p">)</span>
+            <span class="n">result_response</span> <span class="o">=</span> <span class="n">as_python_str</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">response</span><span class="p">)</span>
+        <span class="k">finally</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">library_handle</span><span class="o">.</span><span class="n">G2GoHelper_free</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">response</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">result_response</span></div>
+
+
+<div class="viewcode-block" id="G2Config.load">
+<a class="viewcode-back" href="../../senzing.html#senzing.g2config.G2Config.load">[docs]</a>
+    <span class="k">def</span> <span class="nf">load</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">json_config</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="n">Any</span><span class="p">]],</span> <span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">library_handle</span><span class="o">.</span><span class="n">G2Config_load_helper</span><span class="p">(</span>
+            <span class="n">as_c_char_p</span><span class="p">(</span><span class="n">as_str</span><span class="p">(</span><span class="n">json_config</span><span class="p">))</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="n">result</span><span class="o">.</span><span class="n">return_code</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="bp">self</span><span class="o">.</span><span class="n">new_exception</span><span class="p">(</span><span class="mi">4009</span><span class="p">,</span> <span class="n">as_str</span><span class="p">(</span><span class="n">json_config</span><span class="p">),</span> <span class="n">result</span><span class="o">.</span><span class="n">return_code</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">as_python_int</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">response</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="G2Config.save">
+<a class="viewcode-back" href="../../senzing.html#senzing.g2config.G2Config.save">[docs]</a>
+    <span class="k">def</span> <span class="nf">save</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config_handle</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">library_handle</span><span class="o">.</span><span class="n">G2Config_save_helper</span><span class="p">(</span><span class="n">as_uintptr_t</span><span class="p">(</span><span class="n">config_handle</span><span class="p">))</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">result</span><span class="o">.</span><span class="n">return_code</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="bp">self</span><span class="o">.</span><span class="n">new_exception</span><span class="p">(</span><span class="mi">4010</span><span class="p">,</span> <span class="n">config_handle</span><span class="p">,</span> <span class="n">result</span><span class="o">.</span><span class="n">return_code</span><span class="p">)</span>
+            <span class="n">result_response</span> <span class="o">=</span> <span class="n">as_python_str</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">response</span><span class="p">)</span>
+        <span class="k">finally</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">library_handle</span><span class="o">.</span><span class="n">G2GoHelper_free</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">response</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">result_response</span></div>
+</div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Senzing.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
